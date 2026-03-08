@@ -64,19 +64,24 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar: lighter navy */
-    --sidebar-background: 225 45% 32%;
-    --sidebar-foreground: 220 20% 95%;
+    /* Sidebar: deep navy */
+    --sidebar-background: 212 52% 23%;
+    --sidebar-foreground: 210 20% 95%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 225 45% 32%;
-    --sidebar-accent: 225 42% 40%;
+    --sidebar-primary-foreground: 212 52% 23%;
+    --sidebar-accent: 215 45% 30%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 225 40% 38%;
+    --sidebar-border: 212 40% 33%;
     --sidebar-ring: 225 65% 50%;
+    --sidebar-active: 216 62% 40%;
+    --sidebar-active-accent: 142 72% 29%;
+    --sidebar-hover: 215 48% 28%;
+    --sidebar-right-border: 212 45% 33%;
+    --sidebar-submenu-text: 214 32% 80%;
 
     /* Header gradient */
-    --header-from: 225 45% 32%;
-    --header-to: 240 45% 38%;
+    --header-from: 212 52% 23%;
+    --header-to: 215 60% 16%;
   }
 }
 
@@ -100,10 +105,10 @@
 
 @layer utilities {
   .gradient-sidebar {
-    background: linear-gradient(180deg, hsl(225 45% 32%), hsl(235 42% 28%));
+    background: linear-gradient(180deg, #1B3A5C, #0F2340);
   }
   .gradient-header {
-    background: linear-gradient(90deg, hsl(225 45% 32%), hsl(245 42% 38%));
+    background: linear-gradient(90deg, #1B3A5C, #0F2340);
   }
   .gradient-stat-green {
     background: linear-gradient(135deg, hsl(152 69% 40%), hsl(162 63% 32%));

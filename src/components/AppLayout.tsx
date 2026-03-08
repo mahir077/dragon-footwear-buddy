@@ -146,13 +146,34 @@ const AppLayout = () => {
     });
   }, [location.pathname]);
 
-  const sidebarW = collapsed ? "w-12" : "w-[220px]";
+  const sidebarW = collapsed ? "w-14" : "w-[230px]";
 
-  const activeClass = "bg-white/15 text-white font-semibold";
-  const hoverClass = "hover:bg-white/10 hover:text-white";
+  const activeClass = "bg-[#2563A8] text-white font-semibold border-l-4 border-[#16A34A]";
+  const hoverClass = "hover:bg-[#243F6B] text-white/90 border-l-4 border-transparent";
+  const activeChildClass = "bg-[#2563A8]/60 text-white font-semibold border-l-4 border-[#16A34A]";
 
   const renderSidebar = (isMobile = false) => (
-    <nav className="flex-1 py-3 px-1.5 overflow-y-auto space-y-0.5">
+    <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-0.5">
+      {/* Dragon Logo Area */}
+      {(!collapsed || isMobile) && (
+        <div className="flex items-center gap-2.5 px-3 py-3 mb-3 border-b border-white/10">
+          <div className="w-9 h-9 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-md">
+            <span className="text-white text-lg font-bold">🐉</span>
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm leading-tight">ড্রাগন পিউ</p>
+            <p className="text-[#CBD5E1] text-[10px] leading-tight">ফুটওয়্যার ম্যানেজমেন্ট</p>
+          </div>
+        </div>
+      )}
+      {collapsed && !isMobile && (
+        <div className="flex justify-center py-3 mb-3 border-b border-white/10">
+          <div className="w-8 h-8 rounded-lg bg-[#16A34A] flex items-center justify-center shadow-md">
+            <span className="text-white text-sm">🐉</span>
+          </div>
+        </div>
+      )}
+
       {menuItems.map((item) => {
         const iconSize = collapsed && !isMobile ? "w-5 h-5" : "w-[18px] h-[18px]";
         if (item.children) {
@@ -163,11 +184,11 @@ const AppLayout = () => {
                 <button
                   onClick={() => toggleExpand(item.bn)}
                   className={`flex items-center justify-center w-full py-2.5 rounded-lg transition-all ${
-                    isChildActive(item.children) ? activeClass : hoverClass
+                    isChildActive(item.children) ? "bg-[#2563A8] text-white" : "hover:bg-[#243F6B] text-white/80"
                   }`}
                   title={item.bn}
                 >
-                  <item.icon className={`${iconSize} text-white/80`} />
+                  <item.icon className={`${iconSize}`} />
                 </button>
               </div>
             );
@@ -176,25 +197,25 @@ const AppLayout = () => {
             <div key={item.bn}>
               <button
                 onClick={() => toggleExpand(item.bn)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-all rounded-lg text-[14px] ${
+                className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-all rounded-lg text-[14px] font-medium ${
                   isChildActive(item.children) ? activeClass : hoverClass
                 }`}
               >
-                <item.icon className={`${iconSize} shrink-0 text-white/80`} />
-                <span className="flex-1 font-bengali text-white/90">{item.bn}</span>
+                <item.icon className={`${iconSize} shrink-0`} />
+                <span className="flex-1 text-white">{item.bn}</span>
                 {expanded ? <ChevronDown className="w-3.5 h-3.5 text-white/50" /> : <ChevronRight className="w-3.5 h-3.5 text-white/50" />}
               </button>
               {expanded && (
-                <div className="ml-8 mr-1 border-l border-white/10 pl-2 my-1 space-y-0.5">
+                <div className="ml-8 mr-1 border-l border-[#2D4F7C] pl-2 my-1 space-y-0.5">
                   {item.children.map((child) => (
                     <Link
                       key={child.path}
                       to={child.path}
                       onClick={closeMobileSidebar}
-                      className={`block px-2.5 py-1.5 rounded-md text-[13px] font-bengali transition-all ${
+                      className={`block px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
                         isActive(child.path)
-                          ? "bg-white/15 text-white font-semibold"
-                          : "text-white/60 hover:bg-white/10 hover:text-white/90"
+                          ? "bg-[#2563A8]/50 text-white font-semibold border-l-2 border-[#16A34A]"
+                          : "text-[#CBD5E1] hover:bg-[#243F6B] hover:text-white"
                       }`}
                     >
                       {child.bn}
@@ -212,11 +233,11 @@ const AppLayout = () => {
               key={item.path}
               to={item.path!}
               className={`flex items-center justify-center py-2.5 rounded-lg transition-all ${
-                isActive(item.path) ? activeClass : hoverClass
+                isActive(item.path) ? "bg-[#2563A8] text-white" : "hover:bg-[#243F6B] text-white/80"
               }`}
               title={item.bn}
             >
-              <item.icon className={`${iconSize} text-white/80`} />
+              <item.icon className={`${iconSize}`} />
             </Link>
           );
         }
@@ -226,12 +247,12 @@ const AppLayout = () => {
             key={item.path}
             to={item.path!}
             onClick={closeMobileSidebar}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[14px] ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[14px] font-medium ${
               isActive(item.path) ? activeClass : hoverClass
             }`}
           >
-            <item.icon className={`${iconSize} shrink-0 text-white/80`} />
-            <span className="font-bengali text-white/90">{item.bn}</span>
+            <item.icon className={`${iconSize} shrink-0`} />
+            <span className="text-white">{item.bn}</span>
           </Link>
         );
       })}
@@ -276,7 +297,7 @@ const AppLayout = () => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <aside className={`hidden md:flex flex-col ${sidebarW} gradient-sidebar text-white shrink-0 overflow-y-auto transition-all duration-300 border-r border-white/5`}>
+        <aside className={`hidden md:flex flex-col ${sidebarW} gradient-sidebar text-white shrink-0 overflow-y-auto transition-all duration-300 border-r border-[#2D4F7C]`}>
           {renderSidebar()}
         </aside>
 
@@ -284,7 +305,7 @@ const AppLayout = () => {
         {sidebarOpen && (
           <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={closeMobileSidebar} />
-            <aside className="fixed top-[3.25rem] left-0 bottom-0 w-[260px] gradient-sidebar text-white z-50 md:hidden overflow-y-auto shadow-2xl border-r border-white/5">
+            <aside className="fixed top-[3.25rem] left-0 bottom-0 w-[260px] gradient-sidebar text-white z-50 md:hidden overflow-y-auto shadow-2xl border-r border-[#2D4F7C]">
               {renderSidebar(true)}
             </aside>
           </>
