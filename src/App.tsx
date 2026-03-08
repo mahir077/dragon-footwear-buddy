@@ -8,11 +8,20 @@ import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
+import SetupIndex from "./pages/setup/SetupIndex";
+import BrandsPage from "./pages/setup/BrandsPage";
+import ModelsPage from "./pages/setup/ModelsPage";
+import ArticlesPage from "./pages/setup/ArticlesPage";
+import PartiesPage from "./pages/setup/PartiesPage";
+import ColorsPage from "./pages/setup/ColorsPage";
+import LocationsPage from "./pages/setup/LocationsPage";
+import BanksPage from "./pages/setup/BanksPage";
+import EmployeesPage from "./pages/setup/EmployeesPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "setup", "fiscal-year", "daily-ledger", "purchase", "production",
+  "fiscal-year", "daily-ledger", "purchase", "production",
   "sales", "cash-bank-loan", "employee", "rent-commission",
   "capital-insurance", "waste-sales", "register", "excel",
   "summary", "invoice", "system",
@@ -28,6 +37,15 @@ const App = () => (
           <Route path="/" element={<Login />} />
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/setup" element={<SetupIndex />} />
+            <Route path="/setup/brands" element={<BrandsPage />} />
+            <Route path="/setup/models" element={<ModelsPage />} />
+            <Route path="/setup/articles" element={<ArticlesPage />} />
+            <Route path="/setup/parties" element={<PartiesPage />} />
+            <Route path="/setup/colors" element={<ColorsPage />} />
+            <Route path="/setup/locations" element={<LocationsPage />} />
+            <Route path="/setup/banks" element={<BanksPage />} />
+            <Route path="/setup/employees" element={<EmployeesPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
