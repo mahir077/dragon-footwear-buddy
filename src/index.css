@@ -105,7 +105,7 @@
 
 @layer utilities {
   .gradient-sidebar {
-    background: linear-gradient(180deg, hsl(225 45% 32%), hsl(235 42% 28%));
+    background: linear-gradient(180deg, #1B3A5C, #0F2340);
   }
   .gradient-header {
     background: linear-gradient(90deg, hsl(225 45% 32%), hsl(245 42% 38%));
