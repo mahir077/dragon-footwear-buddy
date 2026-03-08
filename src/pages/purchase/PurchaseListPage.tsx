@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { DeleteConfirmDialog } from "@/components/setup/DeleteConfirmDialog";
+import DeleteConfirmDialog from "@/components/setup/DeleteConfirmDialog";
 
 const toBn = (n: number) => n.toString().replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
