@@ -57,16 +57,46 @@ const menuItems: MenuItem[] = [
       { bn: "Reconciliation", path: "/production/reconciliation" },
     ],
   },
-  { bn: "বিক্রয়", icon: TrendingUp, path: "/sales" },
-  { bn: "ক্যাশ/ব্যাংক/লোন", icon: Landmark, path: "/cash-bank-loan" },
-  { bn: "কর্মচারী", icon: Users, path: "/employee" },
+  {
+    bn: "বিক্রয়", icon: TrendingUp,
+    children: [
+      { bn: "নতুন বিক্রয়", path: "/sales/new" },
+      { bn: "বিক্রয় তালিকা", path: "/sales/list" },
+      { bn: "পার্টি লেজার", path: "/party/ledger" },
+      { bn: "সব পার্টি ব্যালেন্স", path: "/party/all-balance" },
+    ],
+  },
+  {
+    bn: "ক্যাশ/ব্যাংক/লোন", icon: Landmark,
+    children: [
+      { bn: "দৈনিক নগদ", path: "/khata/cash" },
+      { bn: "ব্যাংক লেজার", path: "/khata/bank" },
+      { bn: "লোন নেওয়া", path: "/finance/loan-borrowed" },
+      { bn: "লোন দেওয়া", path: "/finance/loan-lent" },
+      { bn: "FDR/সঞ্চয়", path: "/finance/fdr" },
+    ],
+  },
+  {
+    bn: "কর্মচারী", icon: Users,
+    children: [
+      { bn: "উপস্থিতি", path: "/employee/attendance" },
+      { bn: "বেতন শিট", path: "/employee/salary" },
+      { bn: "অগ্রিম", path: "/employee/advance" },
+    ],
+  },
   { bn: "ভাড়া ও কমিশন", icon: Home, path: "/rent-commission" },
   { bn: "মূলধন ও বীমা", icon: Shield, path: "/capital-insurance" },
   { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste-sales" },
   { bn: "রেজিস্টার", icon: ClipboardList, path: "/register" },
   { bn: "এক্সেল", icon: FileSpreadsheet, path: "/excel" },
   { bn: "সারসংক্ষেপ", icon: BarChart3, path: "/summary" },
-  { bn: "ইনভয়েস", icon: FileText, path: "/invoice" },
+  {
+    bn: "ইনভয়েস", icon: FileText,
+    children: [
+      { bn: "নতুন ইনভয়েস", path: "/invoice/new" },
+      { bn: "ইনভয়েস তালিকা", path: "/invoice/list" },
+    ],
+  },
   { bn: "সিস্টেম", icon: Cog, path: "/system" },
 ];
 

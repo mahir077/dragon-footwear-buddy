@@ -35,13 +35,28 @@ import GodownStockPage from "./pages/godown/GodownStockPage";
 import DamagePage from "./pages/godown/DamagePage";
 import TransferPage from "./pages/godown/TransferPage";
 import ReconciliationPage from "./pages/production/ReconciliationPage";
+// Sales Module
+import SalesNewPage from "./pages/sales/SalesNewPage";
+import SalesListPage from "./pages/sales/SalesListPage";
+import PartyLedgerPage from "./pages/party/PartyLedgerPage";
+import PartyAllBalancePage from "./pages/party/PartyAllBalancePage";
+// Finance Module
+import LoanBorrowedPage from "./pages/finance/LoanBorrowedPage";
+import LoanLentPage from "./pages/finance/LoanLentPage";
+import FdrPage from "./pages/finance/FdrPage";
+// Employee Module
+import AttendancePage from "./pages/employee/AttendancePage";
+import SalaryPage from "./pages/employee/SalaryPage";
+import EmployeeAdvancePage from "./pages/employee/EmployeeAdvancePage";
+// Invoice Module
+import InvoiceNewPage from "./pages/invoice/InvoiceNewPage";
+import InvoiceListPage from "./pages/invoice/InvoiceListPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "sales", "cash-bank-loan", "employee",
   "rent-commission", "capital-insurance", "waste-sales", "register",
-  "excel", "summary", "invoice", "system",
+  "excel", "summary", "system",
 ];
 
 const App = () => (
@@ -81,6 +96,22 @@ const App = () => (
             <Route path="/godown/damage" element={<DamagePage />} />
             <Route path="/godown/transfer" element={<TransferPage />} />
             <Route path="/production/reconciliation" element={<ReconciliationPage />} />
+            {/* Sales */}
+            <Route path="/sales/new" element={<SalesNewPage />} />
+            <Route path="/sales/list" element={<SalesListPage />} />
+            <Route path="/party/ledger" element={<PartyLedgerPage />} />
+            <Route path="/party/all-balance" element={<PartyAllBalancePage />} />
+            {/* Finance */}
+            <Route path="/finance/loan-borrowed" element={<LoanBorrowedPage />} />
+            <Route path="/finance/loan-lent" element={<LoanLentPage />} />
+            <Route path="/finance/fdr" element={<FdrPage />} />
+            {/* Employee */}
+            <Route path="/employee/attendance" element={<AttendancePage />} />
+            <Route path="/employee/salary" element={<SalaryPage />} />
+            <Route path="/employee/advance" element={<EmployeeAdvancePage />} />
+            {/* Invoice */}
+            <Route path="/invoice/new" element={<InvoiceNewPage />} />
+            <Route path="/invoice/list" element={<InvoiceListPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
