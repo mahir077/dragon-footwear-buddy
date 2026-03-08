@@ -305,7 +305,7 @@ const AppLayout = () => {
         {sidebarOpen && (
           <>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={closeMobileSidebar} />
-            <aside className="fixed top-[3.25rem] left-0 bottom-0 w-[260px] gradient-sidebar text-white z-50 md:hidden overflow-y-auto shadow-2xl border-r border-white/5">
+            <aside className="fixed top-[3.25rem] left-0 bottom-0 w-[260px] gradient-sidebar text-white z-50 md:hidden overflow-y-auto shadow-2xl border-r border-[#2D4F7C]">
               {renderSidebar(true)}
             </aside>
           </>
