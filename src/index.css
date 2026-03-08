@@ -1,58 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 213 37% 22%;
+    --background: 220 20% 97%;
+    --foreground: 220 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 213 37% 22%;
+    --card-foreground: 220 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 37% 22%;
+    --popover-foreground: 220 30% 15%;
 
-    --primary: 213 52% 23%;
+    --primary: 225 65% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 213 52% 23%;
+    --secondary: 220 25% 94%;
+    --secondary-foreground: 225 65% 40%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 213 52% 23%;
+    --accent: 250 60% 96%;
+    --accent-foreground: 250 60% 40%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 152 69% 40%;
     --success-foreground: 0 0% 100%;
 
-    --stat-green: 142 76% 36%;
-    --stat-red: 0 84% 60%;
-    --stat-blue: 213 52% 23%;
+    /* Stat card gradients - from/to pairs */
+    --stat-green-from: 152 69% 40%;
+    --stat-green-to: 162 63% 32%;
+    --stat-red-from: 0 72% 56%;
+    --stat-red-to: 348 70% 48%;
+    --stat-blue-from: 225 65% 48%;
+    --stat-blue-to: 240 60% 38%;
+    --stat-teal-from: 173 58% 39%;
+    --stat-teal-to: 185 55% 30%;
+    --stat-purple-from: 271 60% 56%;
+    --stat-purple-to: 280 55% 44%;
+    --stat-deep-purple-from: 263 83% 58%;
+    --stat-deep-purple-to: 275 78% 46%;
+    --stat-orange-from: 25 95% 53%;
+    --stat-orange-to: 15 85% 45%;
+
+    /* Flat fallbacks for non-gradient usage */
+    --stat-green: 152 69% 40%;
+    --stat-red: 0 72% 51%;
+    --stat-blue: 225 65% 48%;
     --stat-teal: 173 58% 39%;
-    --stat-purple: 271 51% 54%;
+    --stat-purple: 271 60% 56%;
     --stat-deep-purple: 263 83% 58%;
     --stat-orange: 25 95% 53%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 213 52% 23%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 225 65% 50%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 213 52% 23%;
-    --sidebar-foreground: 210 40% 96%;
+    /* Sidebar: deep dark gradient feel */
+    --sidebar-background: 225 50% 16%;
+    --sidebar-foreground: 220 20% 95%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 213 52% 23%;
-    --sidebar-accent: 213 52% 30%;
+    --sidebar-primary-foreground: 225 50% 16%;
+    --sidebar-accent: 225 50% 24%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 213 52% 30%;
-    --sidebar-ring: 213 52% 50%;
+    --sidebar-border: 225 40% 22%;
+    --sidebar-ring: 225 65% 50%;
+
+    /* Header gradient */
+    --header-from: 225 50% 16%;
+    --header-to: 240 50% 22%;
   }
 }
 
@@ -63,10 +87,67 @@
 
   html {
     font-size: 16px;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'Noto Sans Bengali', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .gradient-sidebar {
+    background: linear-gradient(180deg, hsl(225 50% 16%), hsl(240 45% 12%));
+  }
+  .gradient-header {
+    background: linear-gradient(90deg, hsl(225 50% 16%), hsl(250 50% 22%));
+  }
+  .gradient-stat-green {
+    background: linear-gradient(135deg, hsl(152 69% 40%), hsl(162 63% 32%));
+  }
+  .gradient-stat-red {
+    background: linear-gradient(135deg, hsl(0 72% 56%), hsl(348 70% 48%));
+  }
+  .gradient-stat-blue {
+    background: linear-gradient(135deg, hsl(225 65% 48%), hsl(240 60% 38%));
+  }
+  .gradient-stat-teal {
+    background: linear-gradient(135deg, hsl(173 58% 39%), hsl(185 55% 30%));
+  }
+  .gradient-stat-purple {
+    background: linear-gradient(135deg, hsl(271 60% 56%), hsl(280 55% 44%));
+  }
+  .gradient-stat-deep-purple {
+    background: linear-gradient(135deg, hsl(263 83% 58%), hsl(275 78% 46%));
+  }
+  .gradient-stat-orange {
+    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(15 85% 45%));
+  }
+  .card-glow {
+    box-shadow: 0 8px 32px -8px hsl(225 65% 40% / 0.18), 0 2px 8px -2px hsl(0 0% 0% / 0.06);
+  }
+  .card-glow-green {
+    box-shadow: 0 8px 32px -8px hsl(152 69% 40% / 0.35);
+  }
+  .card-glow-red {
+    box-shadow: 0 8px 32px -8px hsl(0 72% 51% / 0.35);
+  }
+  .card-glow-blue {
+    box-shadow: 0 8px 32px -8px hsl(225 65% 48% / 0.35);
+  }
+  .card-glow-teal {
+    box-shadow: 0 8px 32px -8px hsl(173 58% 39% / 0.35);
+  }
+  .card-glow-purple {
+    box-shadow: 0 8px 32px -8px hsl(271 60% 56% / 0.35);
+  }
+  .card-glow-deep-purple {
+    box-shadow: 0 8px 32px -8px hsl(263 83% 58% / 0.35);
+  }
+  .card-glow-orange {
+    box-shadow: 0 8px 32px -8px hsl(25 95% 53% / 0.35);
   }
 }
