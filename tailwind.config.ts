@@ -70,6 +70,7 @@ export default {
           blue: "hsl(var(--stat-blue))",
           teal: "hsl(var(--stat-teal))",
           purple: "hsl(var(--stat-purple))",
+          "deep-purple": "hsl(var(--stat-deep-purple))",
           orange: "hsl(var(--stat-orange))",
         },
       },
