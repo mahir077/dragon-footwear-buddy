@@ -297,7 +297,7 @@ const AppLayout = () => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <aside className={`hidden md:flex flex-col ${sidebarW} gradient-sidebar text-white shrink-0 overflow-y-auto transition-all duration-300 border-r border-white/5`}>
+        <aside className={`hidden md:flex flex-col ${sidebarW} gradient-sidebar text-white shrink-0 overflow-y-auto transition-all duration-300 border-r border-[#2D4F7C]`}>
           {renderSidebar()}
         </aside>
 
