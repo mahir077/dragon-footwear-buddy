@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Settings, CalendarDays, BookOpen, ShoppingCart,
   Factory, TrendingUp, Landmark, Users, Home, Shield, Recycle,
   ClipboardList, FileSpreadsheet, BarChart3, FileText, Cog, LogOut,
-  ChevronDown, ChevronRight, Menu, X, Package, Warehouse,
+  ChevronDown, ChevronRight, Menu, X, Package, Warehouse, ArrowLeft,
 } from "lucide-react";
 
 type SubItem = { bn: string; path: string };
