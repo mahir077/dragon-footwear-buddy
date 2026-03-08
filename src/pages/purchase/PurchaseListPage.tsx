@@ -112,7 +112,6 @@ const PurchaseListPage = () => {
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         onConfirm={() => { if (deleteId) { deleteMut.mutate(deleteId); setDeleteId(null); } }}
-        title="এই ক্রয় মুছে ফেলবেন?"
       />
     </div>
   );
