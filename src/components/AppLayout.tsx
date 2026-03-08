@@ -211,12 +211,23 @@ const AppLayout = () => {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-primary text-primary-foreground h-12 flex items-center justify-between px-3 shrink-0 z-40">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden p-1.5 rounded-md hover:bg-white/10 transition-colors"
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden p-1.5 rounded-md hover:bg-white/10 transition-colors"
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          {location.pathname !== "/dashboard" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1.5 rounded-md hover:bg-white/10 transition-colors"
+              title="পিছনে যান"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
         <div className="text-center flex-1 md:text-left md:flex-none">
           <h1 className="text-sm md:text-base font-bold font-bengali leading-tight">ড্রাগন পিউ ফুটওয়্যার</h1>
