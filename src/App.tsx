@@ -24,11 +24,22 @@ import KhataDailyPage from "./pages/khata/KhataDailyPage";
 import KhataCashPage from "./pages/khata/KhataCashPage";
 import KhataBankPage from "./pages/khata/KhataBankPage";
 import KhataCombinedPage from "./pages/khata/KhataCombinedPage";
+import PurchaseNewPage from "./pages/purchase/PurchaseNewPage";
+import PurchaseListPage from "./pages/purchase/PurchaseListPage";
+import SupplierLedgerPage from "./pages/purchase/SupplierLedgerPage";
+import RawStockPage from "./pages/purchase/RawStockPage";
+import AdvancePage from "./pages/purchase/AdvancePage";
+import ProductionEntryPage from "./pages/production/ProductionEntryPage";
+import ProductionListPage from "./pages/production/ProductionListPage";
+import GodownStockPage from "./pages/godown/GodownStockPage";
+import DamagePage from "./pages/godown/DamagePage";
+import TransferPage from "./pages/godown/TransferPage";
+import ReconciliationPage from "./pages/production/ReconciliationPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "purchase", "production", "sales", "cash-bank-loan", "employee",
+  "sales", "cash-bank-loan", "employee",
   "rent-commission", "capital-insurance", "waste-sales", "register",
   "excel", "summary", "invoice", "system",
 ];
@@ -59,6 +70,17 @@ const App = () => (
             <Route path="/khata/cash" element={<KhataCashPage />} />
             <Route path="/khata/bank" element={<KhataBankPage />} />
             <Route path="/khata/combined" element={<KhataCombinedPage />} />
+            <Route path="/purchase/new" element={<PurchaseNewPage />} />
+            <Route path="/purchase/list" element={<PurchaseListPage />} />
+            <Route path="/purchase/supplier-ledger" element={<SupplierLedgerPage />} />
+            <Route path="/purchase/raw-stock" element={<RawStockPage />} />
+            <Route path="/purchase/advance" element={<AdvancePage />} />
+            <Route path="/production/entry" element={<ProductionEntryPage />} />
+            <Route path="/production/list" element={<ProductionListPage />} />
+            <Route path="/godown/stock" element={<GodownStockPage />} />
+            <Route path="/godown/damage" element={<DamagePage />} />
+            <Route path="/godown/transfer" element={<TransferPage />} />
+            <Route path="/production/reconciliation" element={<ReconciliationPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
