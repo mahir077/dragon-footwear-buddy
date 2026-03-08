@@ -14,7 +14,313 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      articles: {
+        Row: {
+          article_no: string
+          id: string
+          is_active: boolean | null
+          model_id: string | null
+          pairs_per_carton: number
+          series_group: string | null
+        }
+        Insert: {
+          article_no: string
+          id?: string
+          is_active?: boolean | null
+          model_id?: string | null
+          pairs_per_carton?: number
+          series_group?: string | null
+        }
+        Update: {
+          article_no?: string
+          id?: string
+          is_active?: boolean | null
+          model_id?: string | null
+          pairs_per_carton?: number
+          series_group?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_accounts: {
+        Row: {
+          account_no: string | null
+          bank_name: string
+          branch: string | null
+          id: string
+          is_active: boolean | null
+          opening_balance: number | null
+        }
+        Insert: {
+          account_no?: string | null
+          bank_name: string
+          branch?: string | null
+          id?: string
+          is_active?: boolean | null
+          opening_balance?: number | null
+        }
+        Update: {
+          account_no?: string | null
+          bank_name?: string
+          branch?: string | null
+          id?: string
+          is_active?: boolean | null
+          opening_balance?: number | null
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          name_bn: string
+          name_en: string | null
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+          name_en?: string | null
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+          name_en?: string | null
+        }
+        Relationships: []
+      }
+      colors: {
+        Row: {
+          hex_code: string | null
+          id: string
+          is_active: boolean | null
+          name_bn: string
+          name_en: string | null
+        }
+        Insert: {
+          hex_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+          name_en?: string | null
+        }
+        Update: {
+          hex_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+          name_en?: string | null
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          address: string | null
+          basic_salary: number | null
+          id: string
+          is_active: boolean | null
+          join_date: string | null
+          mobile: string | null
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          basic_salary?: number | null
+          id?: string
+          is_active?: boolean | null
+          join_date?: string | null
+          mobile?: string | null
+          name: string
+        }
+        Update: {
+          address?: string | null
+          basic_salary?: number | null
+          id?: string
+          is_active?: boolean | null
+          join_date?: string | null
+          mobile?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      expense_heads: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          name_bn: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+        }
+        Relationships: []
+      }
+      financial_years: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          is_locked: boolean | null
+          name: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          name: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          is_locked?: boolean | null
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
+      income_heads: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          name_bn: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          name_bn: string
+          name_en: string | null
+          type: string | null
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+          name_en?: string | null
+          type?: string | null
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+          name_en?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      models: {
+        Row: {
+          brand_id: string | null
+          id: string
+          is_active: boolean | null
+          name_bn: string
+          season: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_bn: string
+          season?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_bn?: string
+          season?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "models_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parties: {
+        Row: {
+          address: string | null
+          id: string
+          is_active: boolean | null
+          mobile: string | null
+          name: string
+          opening_balance: number | null
+          type: string | null
+        }
+        Insert: {
+          address?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile?: string | null
+          name: string
+          opening_balance?: number | null
+          type?: string | null
+        }
+        Update: {
+          address?: string | null
+          id?: string
+          is_active?: boolean | null
+          mobile?: string | null
+          name?: string
+          opening_balance?: number | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      sizes: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          size_value: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          size_value: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          size_value?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
