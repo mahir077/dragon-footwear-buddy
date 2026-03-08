@@ -118,24 +118,26 @@ const AppLayout = () => {
 
   const sidebarW = collapsed ? "w-12" : "w-[220px]";
 
+  const activeClass = "bg-white/15 text-white font-semibold";
+  const hoverClass = "hover:bg-white/10 hover:text-white";
+
   const renderSidebar = (isMobile = false) => (
-    <nav className="flex-1 py-2 overflow-y-auto">
+    <nav className="flex-1 py-3 px-1.5 overflow-y-auto space-y-0.5">
       {menuItems.map((item) => {
-        const iconSize = collapsed && !isMobile ? "w-5 h-5" : "w-4 h-4";
+        const iconSize = collapsed && !isMobile ? "w-5 h-5" : "w-[18px] h-[18px]";
         if (item.children) {
           const expanded = expandedMenus[item.bn] || false;
           if (collapsed && !isMobile) {
-            // Icon-only: show icon, tooltip-like
             return (
               <div key={item.bn} className="relative group">
                 <button
                   onClick={() => toggleExpand(item.bn)}
-                  className={`flex items-center justify-center w-full py-2.5 transition-colors ${
-                    isChildActive(item.children) ? "bg-[hsl(213_52%_35%)]" : "hover:bg-[hsl(213_52%_30%)]"
+                  className={`flex items-center justify-center w-full py-2.5 rounded-lg transition-all ${
+                    isChildActive(item.children) ? activeClass : hoverClass
                   }`}
                   title={item.bn}
                 >
-                  <item.icon className={`${iconSize} text-white/90`} />
+                  <item.icon className={`${iconSize} text-white/80`} />
                 </button>
               </div>
             );
@@ -144,26 +146,25 @@ const AppLayout = () => {
             <div key={item.bn}>
               <button
                 onClick={() => toggleExpand(item.bn)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors rounded-md mx-1 text-[14px] ${
-                  isChildActive(item.children) ? "bg-[hsl(213_52%_35%)]" : "hover:bg-[hsl(213_52%_30%)]"
+                className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-all rounded-lg text-[14px] ${
+                  isChildActive(item.children) ? activeClass : hoverClass
                 }`}
-                style={{ width: "calc(100% - 8px)" }}
               >
-                <item.icon className={`${iconSize} shrink-0 text-white/90`} />
-                <span className="flex-1 font-bengali text-white">{item.bn}</span>
-                {expanded ? <ChevronDown className="w-3.5 h-3.5 text-white/60" /> : <ChevronRight className="w-3.5 h-3.5 text-white/60" />}
+                <item.icon className={`${iconSize} shrink-0 text-white/80`} />
+                <span className="flex-1 font-bengali text-white/90">{item.bn}</span>
+                {expanded ? <ChevronDown className="w-3.5 h-3.5 text-white/50" /> : <ChevronRight className="w-3.5 h-3.5 text-white/50" />}
               </button>
               {expanded && (
-                <div className="ml-7 mr-1 border-l-2 border-white/15 pl-2 my-0.5 space-y-0.5">
+                <div className="ml-8 mr-1 border-l border-white/10 pl-2 my-1 space-y-0.5">
                   {item.children.map((child) => (
                     <Link
                       key={child.path}
                       to={child.path}
                       onClick={closeMobileSidebar}
-                      className={`block px-2 py-1.5 rounded text-[13px] font-bengali transition-colors ${
+                      className={`block px-2.5 py-1.5 rounded-md text-[13px] font-bengali transition-all ${
                         isActive(child.path)
-                          ? "bg-[hsl(213_52%_35%)] text-white font-semibold"
-                          : "text-white/75 hover:bg-[hsl(213_52%_30%)] hover:text-white"
+                          ? "bg-white/15 text-white font-semibold"
+                          : "text-white/60 hover:bg-white/10 hover:text-white/90"
                       }`}
                     >
                       {child.bn}
@@ -180,12 +181,12 @@ const AppLayout = () => {
             <Link
               key={item.path}
               to={item.path!}
-              className={`flex items-center justify-center py-2.5 transition-colors ${
-                isActive(item.path) ? "bg-[hsl(213_52%_35%)]" : "hover:bg-[hsl(213_52%_30%)]"
+              className={`flex items-center justify-center py-2.5 rounded-lg transition-all ${
+                isActive(item.path) ? activeClass : hoverClass
               }`}
               title={item.bn}
             >
-              <item.icon className={`${iconSize} text-white/90`} />
+              <item.icon className={`${iconSize} text-white/80`} />
             </Link>
           );
         }
@@ -195,12 +196,12 @@ const AppLayout = () => {
             key={item.path}
             to={item.path!}
             onClick={closeMobileSidebar}
-            className={`flex items-center gap-2.5 px-3 py-2 mx-1 rounded-md transition-colors text-[14px] ${
-              isActive(item.path) ? "bg-[hsl(213_52%_35%)]" : "hover:bg-[hsl(213_52%_30%)]"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[14px] ${
+              isActive(item.path) ? activeClass : hoverClass
             }`}
           >
-            <item.icon className={`${iconSize} shrink-0 text-white/90`} />
-            <span className="font-bengali text-white">{item.bn}</span>
+            <item.icon className={`${iconSize} shrink-0 text-white/80`} />
+            <span className="font-bengali text-white/90">{item.bn}</span>
           </Link>
         );
       })}
@@ -210,18 +211,18 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground h-12 flex items-center justify-between px-3 shrink-0 z-40">
-        <div className="flex items-center gap-1">
+      <header className="gradient-header text-white h-13 flex items-center justify-between px-4 shrink-0 z-40 shadow-lg">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden p-1.5 rounded-md hover:bg-white/10 transition-colors"
+            className="md:hidden p-1.5 rounded-lg hover:bg-white/10 transition-all"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           {location.pathname !== "/dashboard" && (
             <button
               onClick={() => navigate(-1)}
-              className="p-1.5 rounded-md hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-all"
               title="পিছনে যান"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -230,13 +231,13 @@ const AppLayout = () => {
         </div>
 
         <div className="text-center flex-1 md:text-left md:flex-none">
-          <h1 className="text-sm md:text-base font-bold font-bengali leading-tight">ড্রাগন পিউ ফুটওয়্যার</h1>
-          <p className="text-[10px] text-white/70 font-bengali leading-tight">{getBengaliDate()}</p>
+          <h1 className="text-sm md:text-base font-extrabold font-bengali leading-tight tracking-wide">ড্রাগন পিউ ফুটওয়্যার</h1>
+          <p className="text-[10px] text-white/60 font-bengali leading-tight">{getBengaliDate()}</p>
         </div>
 
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-1 bg-destructive text-destructive-foreground px-2.5 py-1 rounded-md text-xs font-bengali font-semibold hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 bg-white/10 hover:bg-destructive text-white px-3 py-1.5 rounded-lg text-xs font-bengali font-semibold transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">লগআউট</span>
@@ -245,22 +246,22 @@ const AppLayout = () => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop sidebar */}
-        <aside className={`hidden md:flex flex-col ${sidebarW} bg-primary text-white shrink-0 overflow-y-auto transition-all duration-200`}>
+        <aside className={`hidden md:flex flex-col ${sidebarW} gradient-sidebar text-white shrink-0 overflow-y-auto transition-all duration-300 border-r border-white/5`}>
           {renderSidebar()}
         </aside>
 
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <>
-            <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={closeMobileSidebar} />
-            <aside className="fixed top-12 left-0 bottom-0 w-[260px] bg-primary text-white z-50 md:hidden overflow-y-auto shadow-2xl">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={closeMobileSidebar} />
+            <aside className="fixed top-[3.25rem] left-0 bottom-0 w-[260px] gradient-sidebar text-white z-50 md:hidden overflow-y-auto shadow-2xl border-r border-white/5">
               {renderSidebar(true)}
             </aside>
           </>
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-3 md:p-5">
+        <main className="flex-1 overflow-y-auto p-3 md:p-6 bg-background">
           <Outlet />
         </main>
       </div>
