@@ -64,19 +64,19 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar: deep dark gradient feel */
-    --sidebar-background: 225 50% 16%;
+    /* Sidebar: refined navy */
+    --sidebar-background: 225 55% 24%;
     --sidebar-foreground: 220 20% 95%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 225 50% 16%;
-    --sidebar-accent: 225 50% 24%;
+    --sidebar-primary-foreground: 225 55% 24%;
+    --sidebar-accent: 225 50% 32%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 225 40% 22%;
+    --sidebar-border: 225 45% 30%;
     --sidebar-ring: 225 65% 50%;
 
     /* Header gradient */
-    --header-from: 225 50% 16%;
-    --header-to: 240 50% 22%;
+    --header-from: 225 55% 24%;
+    --header-to: 240 50% 30%;
   }
 }
 
