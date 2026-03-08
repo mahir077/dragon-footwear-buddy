@@ -146,10 +146,11 @@ const AppLayout = () => {
     });
   }, [location.pathname]);
 
-  const sidebarW = collapsed ? "w-12" : "w-[220px]";
+  const sidebarW = collapsed ? "w-14" : "w-[230px]";
 
-  const activeClass = "bg-white/15 text-white font-semibold";
-  const hoverClass = "hover:bg-white/10 hover:text-white";
+  const activeClass = "bg-[#2563A8] text-white font-semibold border-l-4 border-[#16A34A]";
+  const hoverClass = "hover:bg-[#243F6B] text-white/90 border-l-4 border-transparent";
+  const activeChildClass = "bg-[#2563A8]/60 text-white font-semibold border-l-4 border-[#16A34A]";
 
   const renderSidebar = (isMobile = false) => (
     <nav className="flex-1 py-3 px-1.5 overflow-y-auto space-y-0.5">
