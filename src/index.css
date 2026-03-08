@@ -100,10 +100,10 @@
 
 @layer utilities {
   .gradient-sidebar {
-    background: linear-gradient(180deg, hsl(225 55% 24%), hsl(235 50% 20%));
+    background: linear-gradient(180deg, hsl(225 45% 32%), hsl(235 42% 28%));
   }
   .gradient-header {
-    background: linear-gradient(90deg, hsl(225 55% 24%), hsl(245 50% 30%));
+    background: linear-gradient(90deg, hsl(225 45% 32%), hsl(245 42% 38%));
   }
   .gradient-stat-green {
     background: linear-gradient(135deg, hsl(152 69% 40%), hsl(162 63% 32%));
