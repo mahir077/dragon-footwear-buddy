@@ -108,7 +108,7 @@
     background: linear-gradient(180deg, #1B3A5C, #0F2340);
   }
   .gradient-header {
-    background: linear-gradient(90deg, hsl(225 45% 32%), hsl(245 42% 38%));
+    background: linear-gradient(90deg, #1B3A5C, #0F2340);
   }
   .gradient-stat-green {
     background: linear-gradient(135deg, hsl(152 69% 40%), hsl(162 63% 32%));
