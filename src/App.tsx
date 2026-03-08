@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
@@ -17,14 +17,20 @@ import ColorsPage from "./pages/setup/ColorsPage";
 import LocationsPage from "./pages/setup/LocationsPage";
 import BanksPage from "./pages/setup/BanksPage";
 import EmployeesPage from "./pages/setup/EmployeesPage";
+import FinancialYearsPage from "./pages/year/FinancialYearsPage";
+import YearPostingsPage from "./pages/year/YearPostingsPage";
+import KhataEntryPage from "./pages/khata/KhataEntryPage";
+import KhataDailyPage from "./pages/khata/KhataDailyPage";
+import KhataCashPage from "./pages/khata/KhataCashPage";
+import KhataBankPage from "./pages/khata/KhataBankPage";
+import KhataCombinedPage from "./pages/khata/KhataCombinedPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "fiscal-year", "daily-ledger", "purchase", "production",
-  "sales", "cash-bank-loan", "employee", "rent-commission",
-  "capital-insurance", "waste-sales", "register", "excel",
-  "summary", "invoice", "system",
+  "purchase", "production", "sales", "cash-bank-loan", "employee",
+  "rent-commission", "capital-insurance", "waste-sales", "register",
+  "excel", "summary", "invoice", "system",
 ];
 
 const App = () => (
@@ -46,6 +52,13 @@ const App = () => (
             <Route path="/setup/locations" element={<LocationsPage />} />
             <Route path="/setup/banks" element={<BanksPage />} />
             <Route path="/setup/employees" element={<EmployeesPage />} />
+            <Route path="/year/manage" element={<FinancialYearsPage />} />
+            <Route path="/year/postings" element={<YearPostingsPage />} />
+            <Route path="/khata/entry" element={<KhataEntryPage />} />
+            <Route path="/khata/daily" element={<KhataDailyPage />} />
+            <Route path="/khata/cash" element={<KhataCashPage />} />
+            <Route path="/khata/bank" element={<KhataBankPage />} />
+            <Route path="/khata/combined" element={<KhataCombinedPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
