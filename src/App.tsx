@@ -52,6 +52,16 @@ import EmployeeAdvancePage from "./pages/employee/EmployeeAdvancePage";
 import InvoiceNewPage from "./pages/invoice/InvoiceNewPage";
 import InvoiceListPage from "./pages/invoice/InvoiceListPage";
 import WasteSalePage from "./pages/waste/WasteSalePage";
+// Rent & Commission
+import FactoryRentPage from "./pages/rent/FactoryRentPage";
+import GodownRentPage from "./pages/rent/GodownRentPage";
+import CommissionPage from "./pages/rent/CommissionPage";
+// Capital & Insurance
+import CapitalStatementPage from "./pages/capital/CapitalStatementPage";
+import CompanyDepositPage from "./pages/capital/CompanyDepositPage";
+import LifeInsurancePage from "./pages/insurance/LifeInsurancePage";
+import PadukaSamitiPage from "./pages/insurance/PadukaSamitiPage";
+import PfPage from "./pages/insurance/PfPage";
 
 const queryClient = new QueryClient();
 
