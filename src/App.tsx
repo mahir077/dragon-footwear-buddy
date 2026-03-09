@@ -52,12 +52,21 @@ import EmployeeAdvancePage from "./pages/employee/EmployeeAdvancePage";
 import InvoiceNewPage from "./pages/invoice/InvoiceNewPage";
 import InvoiceListPage from "./pages/invoice/InvoiceListPage";
 import WasteSalePage from "./pages/waste/WasteSalePage";
+// Rent & Commission
+import FactoryRentPage from "./pages/rent/FactoryRentPage";
+import GodownRentPage from "./pages/rent/GodownRentPage";
+import CommissionPage from "./pages/rent/CommissionPage";
+// Capital & Insurance
+import CapitalStatementPage from "./pages/capital/CapitalStatementPage";
+import CompanyDepositPage from "./pages/capital/CompanyDepositPage";
+import LifeInsurancePage from "./pages/insurance/LifeInsurancePage";
+import PadukaSamitiPage from "./pages/insurance/PadukaSamitiPage";
+import PfPage from "./pages/insurance/PfPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "rent-commission", "capital-insurance", "waste-sales", "register",
-  "excel", "summary", "system",
+  "register", "excel", "summary", "system",
 ];
 
 const App = () => (
@@ -114,6 +123,16 @@ const App = () => (
             <Route path="/invoice/new" element={<InvoiceNewPage />} />
             <Route path="/invoice/list" element={<InvoiceListPage />} />
             <Route path="/waste/sale" element={<WasteSalePage />} />
+            {/* Rent & Commission */}
+            <Route path="/rent/factory" element={<FactoryRentPage />} />
+            <Route path="/rent/godown" element={<GodownRentPage />} />
+            <Route path="/rent/commission" element={<CommissionPage />} />
+            {/* Capital & Insurance */}
+            <Route path="/capital/statement" element={<CapitalStatementPage />} />
+            <Route path="/capital/deposit" element={<CompanyDepositPage />} />
+            <Route path="/insurance/life" element={<LifeInsurancePage />} />
+            <Route path="/insurance/paduka" element={<PadukaSamitiPage />} />
+            <Route path="/insurance/pf" element={<PfPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
