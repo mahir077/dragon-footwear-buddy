@@ -86,7 +86,7 @@ const menuItems: MenuItem[] = [
   },
   { bn: "ভাড়া ও কমিশন", icon: Home, path: "/rent-commission" },
   { bn: "মূলধন ও বীমা", icon: Shield, path: "/capital-insurance" },
-  { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste-sales" },
+  { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste/sale" },
   { bn: "রেজিস্টার", icon: ClipboardList, path: "/register" },
   { bn: "এক্সেল", icon: FileSpreadsheet, path: "/excel" },
   { bn: "সারসংক্ষেপ", icon: BarChart3, path: "/summary" },

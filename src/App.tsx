@@ -51,6 +51,7 @@ import EmployeeAdvancePage from "./pages/employee/EmployeeAdvancePage";
 // Invoice Module
 import InvoiceNewPage from "./pages/invoice/InvoiceNewPage";
 import InvoiceListPage from "./pages/invoice/InvoiceListPage";
+import WasteSalePage from "./pages/waste/WasteSalePage";
 
 const queryClient = new QueryClient();
 
