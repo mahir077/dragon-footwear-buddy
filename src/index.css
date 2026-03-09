@@ -97,7 +97,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Noto Sans Bengali', sans-serif;
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
