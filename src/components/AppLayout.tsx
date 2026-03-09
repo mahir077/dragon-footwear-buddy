@@ -115,7 +115,14 @@ const menuItems: MenuItem[] = [
       { bn: "ইনভয়েস তালিকা", path: "/invoice/list" },
     ],
   },
-  { bn: "সিস্টেম", icon: Cog, path: "/system" },
+  {
+    bn: "সিস্টেম", icon: Cog,
+    children: [
+      { bn: "সেটিংস", path: "/system/settings" },
+      { bn: "রোল ও পারমিশন", path: "/system/roles" },
+      { bn: "অডিট লগ", path: "/system/audit" },
+    ],
+  },
 ];
 
 const toBengaliDigits = (n: number): string => {
