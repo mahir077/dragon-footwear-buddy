@@ -62,11 +62,20 @@ import CompanyDepositPage from "./pages/capital/CompanyDepositPage";
 import LifeInsurancePage from "./pages/insurance/LifeInsurancePage";
 import PadukaSamitiPage from "./pages/insurance/PadukaSamitiPage";
 import PfPage from "./pages/insurance/PfPage";
+// Assets
+import MachineryPage from "./pages/asset/MachineryPage";
+import FurniturePage from "./pages/asset/FurniturePage";
+// Register
+import RegisterPage from "./pages/RegisterPage";
+// System
+import SettingsPage from "./pages/system/SettingsPage";
+import RolesPage from "./pages/system/RolesPage";
+import AuditPage from "./pages/system/AuditPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "register", "excel", "summary", "system",
+  "excel", "summary",
 ];
 
 const App = () => (
@@ -133,6 +142,15 @@ const App = () => (
             <Route path="/insurance/life" element={<LifeInsurancePage />} />
             <Route path="/insurance/paduka" element={<PadukaSamitiPage />} />
             <Route path="/insurance/pf" element={<PfPage />} />
+            {/* Assets */}
+            <Route path="/asset/machinery" element={<MachineryPage />} />
+            <Route path="/asset/furniture" element={<FurniturePage />} />
+            {/* Register */}
+            <Route path="/register" element={<RegisterPage />} />
+            {/* System */}
+            <Route path="/system/settings" element={<SettingsPage />} />
+            <Route path="/system/roles" element={<RolesPage />} />
+            <Route path="/system/audit" element={<AuditPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
