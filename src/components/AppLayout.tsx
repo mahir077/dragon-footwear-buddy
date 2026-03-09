@@ -84,8 +84,24 @@ const menuItems: MenuItem[] = [
       { bn: "অগ্রিম", path: "/employee/advance" },
     ],
   },
-  { bn: "ভাড়া ও কমিশন", icon: Home, path: "/rent-commission" },
-  { bn: "মূলধন ও বীমা", icon: Shield, path: "/capital-insurance" },
+  {
+    bn: "ভাড়া ও কমিশন", icon: Home,
+    children: [
+      { bn: "ফ্যাক্টরি ভাড়া", path: "/rent/factory" },
+      { bn: "গোডাউন ভাড়া", path: "/rent/godown" },
+      { bn: "কমিশন", path: "/rent/commission" },
+    ],
+  },
+  {
+    bn: "মূলধন ও বীমা", icon: Shield,
+    children: [
+      { bn: "মূলধন", path: "/capital/statement" },
+      { bn: "ডিপোজিট", path: "/capital/deposit" },
+      { bn: "লাইফ ইন্স্যুরেন্স", path: "/insurance/life" },
+      { bn: "পাদুকা সমিতি", path: "/insurance/paduka" },
+      { bn: "PF", path: "/insurance/pf" },
+    ],
+  },
   { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste/sale" },
   { bn: "রেজিস্টার", icon: ClipboardList, path: "/register" },
   { bn: "এক্সেল", icon: FileSpreadsheet, path: "/excel" },
