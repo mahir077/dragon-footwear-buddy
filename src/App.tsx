@@ -66,8 +66,7 @@ import PfPage from "./pages/insurance/PfPage";
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "rent-commission", "capital-insurance", "waste-sales", "register",
-  "excel", "summary", "system",
+  "register", "excel", "summary", "system",
 ];
 
 const App = () => (
