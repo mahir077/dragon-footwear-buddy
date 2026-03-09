@@ -142,6 +142,15 @@ const App = () => (
             <Route path="/insurance/life" element={<LifeInsurancePage />} />
             <Route path="/insurance/paduka" element={<PadukaSamitiPage />} />
             <Route path="/insurance/pf" element={<PfPage />} />
+            {/* Assets */}
+            <Route path="/asset/machinery" element={<MachineryPage />} />
+            <Route path="/asset/furniture" element={<FurniturePage />} />
+            {/* Register */}
+            <Route path="/register" element={<RegisterPage />} />
+            {/* System */}
+            <Route path="/system/settings" element={<SettingsPage />} />
+            <Route path="/system/roles" element={<RolesPage />} />
+            <Route path="/system/audit" element={<AuditPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
