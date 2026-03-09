@@ -71,11 +71,16 @@ import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/system/SettingsPage";
 import RolesPage from "./pages/system/RolesPage";
 import AuditPage from "./pages/system/AuditPage";
+// Summary
+import MasterSummaryPage from "./pages/summary/MasterSummaryPage";
+import PartySummaryPage from "./pages/summary/PartySummaryPage";
+import BrandSummaryPage from "./pages/summary/BrandSummaryPage";
+import StockSummaryPage from "./pages/summary/StockSummaryPage";
 
 const queryClient = new QueryClient();
 
 const placeholderRoutes = [
-  "excel", "summary",
+  "excel",
 ];
 
 const App = () => (
@@ -151,6 +156,11 @@ const App = () => (
             <Route path="/system/settings" element={<SettingsPage />} />
             <Route path="/system/roles" element={<RolesPage />} />
             <Route path="/system/audit" element={<AuditPage />} />
+            {/* Summary */}
+            <Route path="/summary/master" element={<MasterSummaryPage />} />
+            <Route path="/summary/party" element={<PartySummaryPage />} />
+            <Route path="/summary/brand" element={<BrandSummaryPage />} />
+            <Route path="/summary/stock" element={<StockSummaryPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
