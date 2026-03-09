@@ -51,6 +51,7 @@ import EmployeeAdvancePage from "./pages/employee/EmployeeAdvancePage";
 // Invoice Module
 import InvoiceNewPage from "./pages/invoice/InvoiceNewPage";
 import InvoiceListPage from "./pages/invoice/InvoiceListPage";
+import WasteSalePage from "./pages/waste/WasteSalePage";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ const App = () => (
             {/* Invoice */}
             <Route path="/invoice/new" element={<InvoiceNewPage />} />
             <Route path="/invoice/list" element={<InvoiceListPage />} />
+            <Route path="/waste/sale" element={<WasteSalePage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
