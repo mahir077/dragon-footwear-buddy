@@ -156,6 +156,11 @@ const App = () => (
             <Route path="/system/settings" element={<SettingsPage />} />
             <Route path="/system/roles" element={<RolesPage />} />
             <Route path="/system/audit" element={<AuditPage />} />
+            {/* Summary */}
+            <Route path="/summary/master" element={<MasterSummaryPage />} />
+            <Route path="/summary/party" element={<PartySummaryPage />} />
+            <Route path="/summary/brand" element={<BrandSummaryPage />} />
+            <Route path="/summary/stock" element={<StockSummaryPage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
