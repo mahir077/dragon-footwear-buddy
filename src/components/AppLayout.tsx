@@ -82,6 +82,8 @@ const menuItems: MenuItem[] = [
       { bn: "উপস্থিতি", path: "/employee/attendance" },
       { bn: "বেতন শিট", path: "/employee/salary" },
       { bn: "অগ্রিম", path: "/employee/advance" },
+      { bn: "মেশিনারি", path: "/asset/machinery" },
+      { bn: "আসবাবপত্র", path: "/asset/furniture" },
     ],
   },
   {
