@@ -113,6 +113,7 @@ const App = () => (
             {/* Invoice */}
             <Route path="/invoice/new" element={<InvoiceNewPage />} />
             <Route path="/invoice/list" element={<InvoiceListPage />} />
+            <Route path="/waste/sale" element={<WasteSalePage />} />
             {placeholderRoutes.map((route) => (
               <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
             ))}
