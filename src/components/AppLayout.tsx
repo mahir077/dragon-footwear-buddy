@@ -107,7 +107,15 @@ const menuItems: MenuItem[] = [
   { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste/sale" },
   { bn: "রেজিস্টার", icon: ClipboardList, path: "/register" },
   { bn: "এক্সেল", icon: FileSpreadsheet, path: "/excel" },
-  { bn: "সারসংক্ষেপ", icon: BarChart3, path: "/summary" },
+  {
+    bn: "সারসংক্ষেপ", icon: BarChart3,
+    children: [
+      { bn: "মাস্টার সারসংক্ষেপ", path: "/summary/master" },
+      { bn: "পার্টি সারসংক্ষেপ", path: "/summary/party" },
+      { bn: "ব্র্যান্ড সারসংক্ষেপ", path: "/summary/brand" },
+      { bn: "স্টক সারসংক্ষেপ", path: "/summary/stock" },
+    ],
+  },
   {
     bn: "ইনভয়েস", icon: FileText,
     children: [
