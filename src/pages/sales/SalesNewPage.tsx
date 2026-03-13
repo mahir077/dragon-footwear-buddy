@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format, parseISO } from "date-fns";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 type SaleItem = { article_id: string; color_id: string; cartons: number; pairs: number; rate: number; amount: number; season: string };
 
@@ -26,6 +26,11 @@ const channels = ["দোকান", "ডিলার", "পাইকারি",
 
 const SalesNewPage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEdit = !!editId;
+
   const [saleType, setSaleType] = useState("cash");
   const [date, setDate] = useState<Date>(new Date());
   const [memoNo, setMemoNo] = useState("");
@@ -41,25 +46,65 @@ const SalesNewPage = () => {
   const [paymentMode, setPaymentMode] = useState("cash");
   const [bankId, setBankId] = useState("");
   const [items, setItems] = useState<SaleItem[]>([{ article_id: "", color_id: "", cartons: 0, pairs: 0, rate: 0, amount: 0, season: "winter" }]);
+  const [loaded, setLoaded] = useState(false);
 
   const { data: parties } = useQuery({ queryKey: ["parties-customer"], queryFn: async () => { const { data } = await supabase.from("parties").select("*").in("type", ["customer", "both"]).eq("is_active", true); return data || []; } });
   const { data: locations } = useQuery({ queryKey: ["locations"], queryFn: async () => { const { data } = await supabase.from("locations").select("*").eq("is_active", true); return data || []; } });
   const { data: brands } = useQuery({ queryKey: ["brands"], queryFn: async () => { const { data } = await supabase.from("brands").select("*").eq("is_active", true); return data || []; } });
-  const { data: articles } = useQuery({ queryKey: ["articles", brandId], queryFn: async () => { let q = supabase.from("articles").select("*, models!inner(brand_id, name_bn)").eq("is_active", true); if (brandId) q = q.eq("models.brand_id", brandId); const { data } = await q; return data || []; }, enabled: true });
+  const { data: articles } = useQuery({ queryKey: ["articles", brandId], queryFn: async () => { let q = supabase.from("articles").select("*, models!inner(brand_id, name_bn)").eq("is_active", true); if (brandId) q = q.eq("models.brand_id", brandId); const { data } = await q; return data || []; } });
   const { data: colors } = useQuery({ queryKey: ["colors"], queryFn: async () => { const { data } = await supabase.from("colors").select("*").eq("is_active", true); return data || []; } });
   const { data: banks } = useQuery({ queryKey: ["banks"], queryFn: async () => { const { data } = await supabase.from("bank_accounts").select("*").eq("is_active", true); return data || []; } });
   const { data: partyBalance } = useQuery({ queryKey: ["party-balance", partyId], queryFn: async () => { if (!partyId) return null; const { data } = await supabase.from("v_party_balance").select("*").eq("party_id", partyId).single(); return data; }, enabled: !!partyId });
   const { data: years } = useQuery({ queryKey: ["active-year"], queryFn: async () => { const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).single(); return data; } });
 
-  // Auto memo number
+  // Load existing sale for edit
   useEffect(() => {
+    if (!editId || loaded) return;
+    const loadSale = async () => {
+      const { data: sale } = await supabase.from("sales").select("*").eq("id", editId).single();
+      if (!sale) return;
+      setSaleType(sale.sale_type || "cash");
+      setDate(sale.date ? parseISO(sale.date) : new Date());
+      setMemoNo(sale.memo_no || "");
+      setPartyId(sale.party_id || "");
+      setLocationId(sale.location_id || "");
+      setBrandId(sale.brand_id || "");
+      setSeason(sale.season === "গরম" ? "summer" : "winter");
+      setChannel(sale.channel || "দোকান");
+      setCommission(sale.commission || 0);
+      setTransport(sale.transport || 0);
+      setDeduction(sale.deduction || 0);
+      setPaidAmount(sale.paid_amount || 0);
+      setPaymentMode(sale.payment_mode || "cash");
+      setBankId(sale.bank_id || "");
+
+      const { data: saleItems } = await supabase.from("sale_items").select("*").eq("sale_id", editId);
+      if (saleItems && saleItems.length > 0) {
+        setItems(saleItems.map((i: any) => ({
+          article_id: i.article_id || "",
+          color_id: i.color_id || "",
+          cartons: i.cartons || 0,
+          pairs: i.pairs || 0,
+          rate: i.rate || 0,
+          amount: i.amount || 0,
+          season: i.season === "গরম" ? "summer" : "winter",
+        })));
+      }
+      setLoaded(true);
+    };
+    loadSale();
+  }, [editId, loaded]);
+
+  // Auto memo number (only for new)
+  useEffect(() => {
+    if (isEdit) return;
     supabase.from("sales").select("memo_no").order("created_at", { ascending: false }).limit(1).then(({ data }) => {
       if (data?.[0]?.memo_no) {
         const num = parseInt(data[0].memo_no.replace(/\D/g, "")) + 1;
         setMemoNo(`SAL-${String(num).padStart(3, "0")}`);
       } else setMemoNo("SAL-001");
     });
-  }, []);
+  }, [isEdit]);
 
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.amount, 0), [items]);
   const commissionAmount = useMemo(() => (subtotal * commission) / 100, [subtotal, commission]);
@@ -88,38 +133,61 @@ const SalesNewPage = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { data: sale, error } = await supabase.from("sales").insert({
+      const saleData = {
         date: format(date, "yyyy-MM-dd"), memo_no: memoNo, party_id: partyId || null,
-        location_id: locationId || null, brand_id: brandId || null, season: season === "winter" ? "শীত" : "গরম",
-        channel, sale_type: saleType, subtotal, commission: commissionAmount, transport, deduction,
-        total_bill: totalBill, paid_amount: paidAmount, payment_mode: paymentMode,
-        bank_id: paymentMode === "bank" ? bankId : null, year_id: years?.id || null,
-      }).select().single();
-      if (error) throw error;
+        location_id: locationId || null, brand_id: brandId || null,
+        season: season === "winter" ? "শীত" : "গরম",
+        channel, sale_type: saleType, subtotal, commission: commissionAmount,
+        transport, deduction, total_bill: totalBill, paid_amount: paidAmount,
+        payment_mode: paymentMode, bank_id: paymentMode === "bank" ? bankId : null,
+        year_id: years?.id || null,
+      };
 
+      let saleId = editId;
+
+      if (isEdit) {
+        // Update sale
+        const { error } = await supabase.from("sales").update(saleData).eq("id", editId);
+        if (error) throw error;
+        // Delete old items & movements
+        await supabase.from("sale_items").delete().eq("sale_id", editId);
+        await supabase.from("stock_movements").delete().eq("reference_id", editId);
+      } else {
+        // Insert new sale
+        const { data: sale, error } = await supabase.from("sales").insert(saleData).select().single();
+        if (error) throw error;
+        saleId = sale.id;
+        // Auto daily transaction entry
+        await supabase.from("daily_transactions").insert({
+          date: format(date, "yyyy-MM-dd"), type: "income",
+          amount: paidAmount > 0 ? paidAmount : totalBill,
+          note: `বিক্রয় - ${memoNo}`, year_id: years?.id || null,
+        });
+      }
+
+      // Insert items
       const saleItems = items.filter(i => i.article_id).map(i => ({
-        sale_id: sale.id, article_id: i.article_id, color_id: i.color_id || null,
-        cartons: i.cartons, pairs: i.pairs, rate: i.rate, amount: i.amount, season: i.season === "winter" ? "শীত" : "গরম",
+        sale_id: saleId, article_id: i.article_id, color_id: i.color_id || null,
+        cartons: i.cartons, pairs: i.pairs, rate: i.rate, amount: i.amount,
+        season: i.season === "winter" ? "শীত" : "গরম",
       }));
       if (saleItems.length) {
         const { error: e2 } = await supabase.from("sale_items").insert(saleItems);
         if (e2) throw e2;
-        // Stock movements
         const movements = items.filter(i => i.article_id).map(i => ({
           date: format(date, "yyyy-MM-dd"), type: "sale", article_id: i.article_id,
           color_id: i.color_id || null, season: i.season === "winter" ? "শীত" : "গরম",
           from_location_id: locationId || null, cartons: -i.cartons, pairs: -i.pairs,
-          reference_id: sale.id,
+          reference_id: saleId,
         }));
         await supabase.from("stock_movements").insert(movements);
       }
-      return sale;
     },
     onSuccess: () => {
-      toast({ title: "সফলভাবে সংরক্ষিত হয়েছে ✅" });
+      toast({ title: isEdit ? "বিক্রয় আপডেট হয়েছে ✅" : "সফলভাবে সংরক্ষিত হয়েছে ✅" });
+      queryClient.invalidateQueries({ queryKey: ["sales-list"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
-      setItems([{ article_id: "", color_id: "", cartons: 0, pairs: 0, rate: 0, amount: 0, season }]);
-      setPaidAmount(0); setCommission(0); setTransport(0); setDeduction(0);
+      navigate("/sales/list");
     },
     onError: (e: any) => toast({ title: "ত্রুটি হয়েছে", description: e.message, variant: "destructive" }),
   });
@@ -127,8 +195,8 @@ const SalesNewPage = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-5">
       <div>
-        <h1 className="text-2xl font-extrabold font-bengali">নতুন বিক্রয়</h1>
-        <p className="text-sm text-muted-foreground">New Sale Entry</p>
+        <h1 className="text-2xl font-extrabold font-bengali">{isEdit ? "বিক্রয় সম্পাদনা" : "নতুন বিক্রয়"}</h1>
+        <p className="text-sm text-muted-foreground">{isEdit ? `Edit Sale — ${memoNo}` : "New Sale Entry"}</p>
       </div>
 
       {/* Sale Type */}
@@ -260,10 +328,13 @@ const SalesNewPage = () => {
         </div>
       </div>
 
-      <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
-        className="w-full py-6 text-lg font-bold font-bengali bg-success hover:bg-success/90 text-success-foreground">
-        {saveMutation.isPending ? "সংরক্ষণ হচ্ছে..." : "বিক্রয় সংরক্ষণ করুন"}
-      </Button>
+      <div className="flex gap-3">
+        <Button variant="outline" className="flex-1 py-6 font-bengali" onClick={() => navigate("/sales/list")}>বাতিল</Button>
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
+          className="flex-1 py-6 text-lg font-bold font-bengali bg-success hover:bg-success/90 text-success-foreground">
+          {saveMutation.isPending ? "সংরক্ষণ হচ্ছে..." : isEdit ? "আপডেট করুন" : "বিক্রয় সংরক্ষণ করুন"}
+        </Button>
+      </div>
     </div>
   );
 };

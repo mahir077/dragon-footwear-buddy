@@ -1,4 +1,5 @@
-import { TrendingUp, TrendingDown, Wallet, Banknote, Building2, Calculator, Snowflake, Sun, AlertTriangle, PackageOpen, ArrowUpRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Banknote, Building2, Calculator, Snowflake, Sun, AlertTriangle, PackageOpen, ArrowUpRight, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,10 @@ const toBn = (n: number): string =>
   Math.round(n).toLocaleString("en").replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
 const Dashboard = () => {
+  
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  
   const today = format(new Date(), "yyyy-MM-dd");
 
   const { data: todayIncome = 0 } = useQuery({
@@ -112,15 +116,24 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full px-6 py-6">
       <div className="flex items-end justify-between mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold font-bengali mb-0.5 text-foreground">ড্যাশবোর্ড</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold font-bengali mb-0.5 text-foreground">ড্যাশবোর্ড</h1>
           <p className="text-sm text-muted-foreground tracking-wide">Dashboard Overview</p>
         </div>
+        <button
+    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-sm font-bengali font-medium transition-all"
+  >
+    <Sun className="w-4 h-4 dark:hidden" />
+    <Moon className="w-4 h-4 hidden dark:block" />
+    <span className="dark:hidden">ডার্ক মোড</span>
+    <span className="hidden dark:block">লাইট মোড</span>
+  </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {statCards.map((card) => (
           <div key={card.en} onClick={() => navigate(card.link)}
             className={`${card.gradient} ${card.glow} group relative text-white rounded-2xl p-4 md:p-5 cursor-pointer hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 overflow-hidden`}>
@@ -129,8 +142,8 @@ const Dashboard = () => {
             <div className="relative z-10">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="text-base md:text-lg font-bold font-bengali leading-tight">{card.bn}</h3>
-                  <p className="text-[10px] md:text-[11px] opacity-70 tracking-wide">{card.en}</p>
+                  <h3 className="text-base md:text-lg font-extrabold font-bengali leading-tight">{card.bn}</h3>
+                  <p className="text-xs md:text-sm opacity-70 tracking-widest uppercase">{card.en}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <card.icon className="w-6 h-6 md:w-7 md:h-7 opacity-80 shrink-0" />
@@ -146,7 +159,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-4 md:gap-5 mt-4">
         {stockCards.map((card) => (
           <div key={card.en} onClick={() => navigate(card.link)}
             className={`${card.gradient} ${card.glow} group relative text-white rounded-2xl p-4 md:p-5 cursor-pointer hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 overflow-hidden`}>
@@ -154,8 +167,8 @@ const Dashboard = () => {
             <div className="relative z-10">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="text-base md:text-lg font-bold font-bengali leading-tight">{card.bn}</h3>
-                  <p className="text-[10px] md:text-[11px] opacity-70 tracking-wide">{card.en}</p>
+                  <h3 className="text-base md:text-lg font-extrabold font-bengali leading-tight">{card.bn}</h3>
+                  <p className="text-xs md:text-sm opacity-70 tracking-widest uppercase">{card.en}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <card.icon className="w-6 h-6 md:w-7 md:h-7 opacity-80 shrink-0" />
@@ -168,7 +181,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mt-6">
         <div className="bg-card border border-destructive/20 rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-xl bg-destructive/10"><AlertTriangle className="h-5 w-5 text-destructive" /></div>

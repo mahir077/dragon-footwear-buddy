@@ -83,6 +83,53 @@
     --header-from: 212 52% 23%;
     --header-to: 215 60% 16%;
   }
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 222 40% 13%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 222 40% 13%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 225 65% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 35% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 222 35% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 222 35% 20%;
+    --accent-foreground: 210 20% 90%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 69% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 222 35% 22%;
+    --input: 222 35% 22%;
+    --ring: 225 65% 60%;
+
+    --sidebar-background: 222 47% 10%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 222 47% 10%;
+    --sidebar-accent: 222 40% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 35% 18%;
+    --sidebar-ring: 225 65% 60%;
+    --sidebar-active: 225 65% 35%;
+    --sidebar-hover: 222 40% 18%;
+    --sidebar-submenu-text: 214 32% 70%;
+
+    --header-from: 222 47% 10%;
+    --header-to: 222 47% 6%;
+  }
 }
 
 @layer base {
@@ -105,11 +152,17 @@
 
 @layer utilities {
   .gradient-sidebar {
-    background: linear-gradient(180deg, #1B3A5C, #0F2340);
-  }
-  .gradient-header {
-    background: linear-gradient(90deg, #1B3A5C, #0F2340);
-  }
+  background: linear-gradient(180deg, #1B3A5C, #0F2340);
+}
+.dark .gradient-sidebar {
+  background: linear-gradient(180deg, #0d1525, #080f1c);
+}
+.gradient-header {
+  background: linear-gradient(90deg, #1B3A5C, #0F2340);
+}
+.dark .gradient-header {
+  background: linear-gradient(90deg, #0d1525, #080f1c);
+}
   .gradient-stat-green {
     background: linear-gradient(135deg, hsl(152 69% 40%), hsl(162 63% 32%));
   }

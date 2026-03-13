@@ -23,6 +23,9 @@ const menuItems: MenuItem[] = [
       { bn: "লোকেশন", path: "/setup/locations" },
       { bn: "ব্যাংক", path: "/setup/banks" },
       { bn: "কর্মচারী", path: "/setup/employees" },
+      { bn: "আয়ের খাত", path: "/setup/income-heads" },
+      { bn: "ব্যয়ের খাত", path: "/setup/expense-heads" },
+      
     ],
   },
   { bn: "আর্থিক বছর", icon: CalendarDays, path: "/year/manage" },
@@ -60,9 +63,11 @@ const menuItems: MenuItem[] = [
   {
     bn: "বিক্রয়", icon: TrendingUp,
     children: [
+
       { bn: "নতুন বিক্রয়", path: "/sales/new" },
       { bn: "বিক্রয় তালিকা", path: "/sales/list" },
       { bn: "পার্টি লেজার", path: "/party/ledger" },
+      { bn: "পার্টি পেমেন্ট", path: "/parties/payment" },
       { bn: "সব পার্টি ব্যালেন্স", path: "/party/all-balance" },
     ],
   },
@@ -179,7 +184,7 @@ const AppLayout = () => {
     });
   }, [location.pathname]);
 
-  const sidebarW = collapsed ? "w-14" : "w-[230px]";
+  const sidebarW = collapsed ? "w-14" : "w-[220px]";
 
   const activeClass = "bg-[#2563A8] text-white font-semibold border-l-4 border-[#16A34A]";
   const hoverClass = "hover:bg-[#243F6B] text-white/90 border-l-4 border-transparent";
@@ -194,8 +199,8 @@ const AppLayout = () => {
             <span className="text-white text-lg font-bold">🐉</span>
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">ড্রাগন পিউ</p>
-            <p className="text-[#CBD5E1] text-[10px] leading-tight">ফুটওয়্যার ম্যানেজমেন্ট</p>
+            <p className="text-white font-bold text-lg leading-tight">ড্রাগন পিউ</p>
+            <p className="text-[#CBD5E1] text-xs leading-tight">ফুটওয়্যার ম্যানেজমেন্ট</p>
           </div>
         </div>
       )}
@@ -245,7 +250,7 @@ const AppLayout = () => {
                       key={child.path}
                       to={child.path}
                       onClick={closeMobileSidebar}
-                      className={`block px-2.5 py-1.5 rounded-md text-[13px] transition-all ${
+                      className={`block px-2.5 py-1.5 rounded-md text-[14px] transition-all ${
                         isActive(child.path)
                           ? "bg-[#2563A8]/50 text-white font-semibold border-l-2 border-[#16A34A]"
                           : "text-[#CBD5E1] hover:bg-[#243F6B] hover:text-white"
@@ -280,7 +285,7 @@ const AppLayout = () => {
             key={item.path}
             to={item.path!}
             onClick={closeMobileSidebar}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[14px] font-medium ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[16px] font-medium ${
               isActive(item.path) ? activeClass : hoverClass
             }`}
           >
@@ -345,7 +350,7 @@ const AppLayout = () => {
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-3 md:p-6 bg-background">
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-background">
           <Outlet />
         </main>
       </div>

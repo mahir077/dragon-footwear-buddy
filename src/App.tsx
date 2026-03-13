@@ -1,3 +1,4 @@
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import AppLayout from "./components/AppLayout";
+import ExcelPage from "./pages/ExcelPage";
 import Dashboard from "./pages/Dashboard";
+import IncomeHeadsPage from "./pages/setup/IncomeHeadsPage";
+import ExpenseHeadsPage from "./pages/setup/ExpenseHeadsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import SetupIndex from "./pages/setup/SetupIndex";
@@ -13,6 +17,7 @@ import BrandsPage from "./pages/setup/BrandsPage";
 import ModelsPage from "./pages/setup/ModelsPage";
 import ArticlesPage from "./pages/setup/ArticlesPage";
 import PartiesPage from "./pages/setup/PartiesPage";
+import PartyPaymentPage from "@/pages/party/PartyPaymentPage";
 import ColorsPage from "./pages/setup/ColorsPage";
 import LocationsPage from "./pages/setup/LocationsPage";
 import BanksPage from "./pages/setup/BanksPage";
@@ -68,6 +73,7 @@ import FurniturePage from "./pages/asset/FurniturePage";
 // Register
 import RegisterPage from "./pages/RegisterPage";
 // System
+
 import SettingsPage from "./pages/system/SettingsPage";
 import RolesPage from "./pages/system/RolesPage";
 import AuditPage from "./pages/system/AuditPage";
@@ -79,96 +85,90 @@ import StockSummaryPage from "./pages/summary/StockSummaryPage";
 
 const queryClient = new QueryClient();
 
-const placeholderRoutes = [
-  "excel",
-];
+const placeholderRoutes: string[] = [];
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/setup" element={<SetupIndex />} />
-            <Route path="/setup/brands" element={<BrandsPage />} />
-            <Route path="/setup/models" element={<ModelsPage />} />
-            <Route path="/setup/articles" element={<ArticlesPage />} />
-            <Route path="/setup/parties" element={<PartiesPage />} />
-            <Route path="/setup/colors" element={<ColorsPage />} />
-            <Route path="/setup/locations" element={<LocationsPage />} />
-            <Route path="/setup/banks" element={<BanksPage />} />
-            <Route path="/setup/employees" element={<EmployeesPage />} />
-            <Route path="/year/manage" element={<FinancialYearsPage />} />
-            <Route path="/year/postings" element={<YearPostingsPage />} />
-            <Route path="/khata/entry" element={<KhataEntryPage />} />
-            <Route path="/khata/daily" element={<KhataDailyPage />} />
-            <Route path="/khata/cash" element={<KhataCashPage />} />
-            <Route path="/khata/bank" element={<KhataBankPage />} />
-            <Route path="/khata/combined" element={<KhataCombinedPage />} />
-            <Route path="/purchase/new" element={<PurchaseNewPage />} />
-            <Route path="/purchase/list" element={<PurchaseListPage />} />
-            <Route path="/purchase/supplier-ledger" element={<SupplierLedgerPage />} />
-            <Route path="/purchase/raw-stock" element={<RawStockPage />} />
-            <Route path="/purchase/advance" element={<AdvancePage />} />
-            <Route path="/production/entry" element={<ProductionEntryPage />} />
-            <Route path="/production/list" element={<ProductionListPage />} />
-            <Route path="/godown/stock" element={<GodownStockPage />} />
-            <Route path="/godown/damage" element={<DamagePage />} />
-            <Route path="/godown/transfer" element={<TransferPage />} />
-            <Route path="/production/reconciliation" element={<ReconciliationPage />} />
-            {/* Sales */}
-            <Route path="/sales/new" element={<SalesNewPage />} />
-            <Route path="/sales/list" element={<SalesListPage />} />
-            <Route path="/party/ledger" element={<PartyLedgerPage />} />
-            <Route path="/party/all-balance" element={<PartyAllBalancePage />} />
-            {/* Finance */}
-            <Route path="/finance/loan-borrowed" element={<LoanBorrowedPage />} />
-            <Route path="/finance/loan-lent" element={<LoanLentPage />} />
-            <Route path="/finance/fdr" element={<FdrPage />} />
-            {/* Employee */}
-            <Route path="/employee/attendance" element={<AttendancePage />} />
-            <Route path="/employee/salary" element={<SalaryPage />} />
-            <Route path="/employee/advance" element={<EmployeeAdvancePage />} />
-            {/* Invoice */}
-            <Route path="/invoice/new" element={<InvoiceNewPage />} />
-            <Route path="/invoice/list" element={<InvoiceListPage />} />
-            <Route path="/waste/sale" element={<WasteSalePage />} />
-            {/* Rent & Commission */}
-            <Route path="/rent/factory" element={<FactoryRentPage />} />
-            <Route path="/rent/godown" element={<GodownRentPage />} />
-            <Route path="/rent/commission" element={<CommissionPage />} />
-            {/* Capital & Insurance */}
-            <Route path="/capital/statement" element={<CapitalStatementPage />} />
-            <Route path="/capital/deposit" element={<CompanyDepositPage />} />
-            <Route path="/insurance/life" element={<LifeInsurancePage />} />
-            <Route path="/insurance/paduka" element={<PadukaSamitiPage />} />
-            <Route path="/insurance/pf" element={<PfPage />} />
-            {/* Assets */}
-            <Route path="/asset/machinery" element={<MachineryPage />} />
-            <Route path="/asset/furniture" element={<FurniturePage />} />
-            {/* Register */}
-            <Route path="/register" element={<RegisterPage />} />
-            {/* System */}
-            <Route path="/system/settings" element={<SettingsPage />} />
-            <Route path="/system/roles" element={<RolesPage />} />
-            <Route path="/system/audit" element={<AuditPage />} />
-            {/* Summary */}
-            <Route path="/summary/master" element={<MasterSummaryPage />} />
-            <Route path="/summary/party" element={<PartySummaryPage />} />
-            <Route path="/summary/brand" element={<BrandSummaryPage />} />
-            <Route path="/summary/stock" element={<StockSummaryPage />} />
-            {placeholderRoutes.map((route) => (
-              <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
-            ))}
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="light">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/setup" element={<SetupIndex />} />
+              <Route path="/setup/brands" element={<BrandsPage />} />
+              <Route path="/setup/models" element={<ModelsPage />} />
+              <Route path="/setup/articles" element={<ArticlesPage />} />
+              <Route path="/setup/parties" element={<PartiesPage />} />
+              <Route path="/setup/colors" element={<ColorsPage />} />
+              <Route path="/setup/locations" element={<LocationsPage />} />
+              <Route path="/setup/banks" element={<BanksPage />} />
+              <Route path="/setup/employees" element={<EmployeesPage />} />
+              <Route path="/setup/income-heads" element={<IncomeHeadsPage />} />
+              <Route path="/setup/expense-heads" element={<ExpenseHeadsPage />} />
+              <Route path="/year/manage" element={<FinancialYearsPage />} />
+              <Route path="/year/postings" element={<YearPostingsPage />} />
+              <Route path="/khata/entry" element={<KhataEntryPage />} />
+              <Route path="/khata/daily" element={<KhataDailyPage />} />
+              <Route path="/khata/cash" element={<KhataCashPage />} />
+              <Route path="/khata/bank" element={<KhataBankPage />} />
+              <Route path="/khata/combined" element={<KhataCombinedPage />} />
+              <Route path="/purchase/new" element={<PurchaseNewPage />} />
+              <Route path="/purchase/list" element={<PurchaseListPage />} />
+              <Route path="/purchase/supplier-ledger" element={<SupplierLedgerPage />} />
+              <Route path="/purchase/raw-stock" element={<RawStockPage />} />
+              <Route path="/purchase/advance" element={<AdvancePage />} />
+              <Route path="/production/entry" element={<ProductionEntryPage />} />
+              <Route path="/production/list" element={<ProductionListPage />} />
+              <Route path="/godown/stock" element={<GodownStockPage />} />
+              <Route path="/godown/damage" element={<DamagePage />} />
+              <Route path="/godown/transfer" element={<TransferPage />} />
+              <Route path="/production/reconciliation" element={<ReconciliationPage />} />
+              <Route path="/parties/payment" element={<PartyPaymentPage />} />
+              <Route path="/sales/new" element={<SalesNewPage />} />
+              <Route path="/sales/list" element={<SalesListPage />} />
+              <Route path="/party/ledger" element={<PartyLedgerPage />} />
+              <Route path="/party/all-balance" element={<PartyAllBalancePage />} />
+              <Route path="/finance/loan-borrowed" element={<LoanBorrowedPage />} />
+              <Route path="/finance/loan-lent" element={<LoanLentPage />} />
+              <Route path="/finance/fdr" element={<FdrPage />} />
+              <Route path="/employee/attendance" element={<AttendancePage />} />
+              <Route path="/employee/salary" element={<SalaryPage />} />
+              <Route path="/employee/advance" element={<EmployeeAdvancePage />} />
+              <Route path="/invoice/new" element={<InvoiceNewPage />} />
+              <Route path="/invoice/list" element={<InvoiceListPage />} />
+              <Route path="/waste/sale" element={<WasteSalePage />} />
+              <Route path="/rent/factory" element={<FactoryRentPage />} />
+              <Route path="/rent/godown" element={<GodownRentPage />} />
+              <Route path="/rent/commission" element={<CommissionPage />} />
+              <Route path="/capital/statement" element={<CapitalStatementPage />} />
+              <Route path="/capital/deposit" element={<CompanyDepositPage />} />
+              <Route path="/insurance/life" element={<LifeInsurancePage />} />
+              <Route path="/insurance/paduka" element={<PadukaSamitiPage />} />
+              <Route path="/insurance/pf" element={<PfPage />} />
+              <Route path="/asset/machinery" element={<MachineryPage />} />
+              <Route path="/asset/furniture" element={<FurniturePage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/system/settings" element={<SettingsPage />} />
+              <Route path="/system/roles" element={<RolesPage />} />
+              <Route path="/system/audit" element={<AuditPage />} />
+              <Route path="/summary/master" element={<MasterSummaryPage />} />
+              <Route path="/summary/party" element={<PartySummaryPage />} />
+              <Route path="/summary/brand" element={<BrandSummaryPage />} />
+              <Route path="/summary/stock" element={<StockSummaryPage />} />
+              <Route path="/excel" element={<ExcelPage />} />
+              {placeholderRoutes.map((route) => (
+                <Route key={route} path={`/${route}`} element={<PlaceholderPage />} />
+              ))}
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
