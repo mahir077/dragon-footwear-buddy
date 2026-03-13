@@ -2,30 +2,79 @@ import { TrendingUp, TrendingDown, Wallet, Banknote, Building2, Calculator, Snow
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
-const toBengaliDigits = (n: number): string => {
-  const digits = "০১২৩৪৫৬৭৮৯";
-  return n.toString().replace(/\d/g, (d) => digits[parseInt(d)]);
-};
-
-const statCards = [
-  { bn: "আজকের আয়", en: "Today's Income", icon: TrendingUp, value: 0, gradient: "gradient-stat-green", glow: "card-glow-green", link: "/khata/daily" },
-  { bn: "আজকের ব্যয়", en: "Today's Expense", icon: TrendingDown, value: 0, gradient: "gradient-stat-red", glow: "card-glow-red", link: "/khata/daily" },
-  { bn: "বাস্তব ব্যালেন্স", en: "Actual Balance", icon: Wallet, value: 0, gradient: "gradient-stat-blue", glow: "card-glow-blue", link: "/khata/combined" },
-  { bn: "অবশিষ্ট ব্যালেন্স", en: "Remaining Balance", icon: Calculator, value: 0, gradient: "gradient-stat-deep-purple", glow: "card-glow-deep-purple", formula: "(আয়+পাওনা) − (ব্যয়+দেনা)", link: "/khata/combined" },
-  { bn: "নগদ", en: "Cash", icon: Banknote, value: 0, gradient: "gradient-stat-teal", glow: "card-glow-teal", link: "/khata/cash" },
-  { bn: "ব্যাংক", en: "Bank", icon: Building2, value: 0, gradient: "gradient-stat-purple", glow: "card-glow-purple", link: "/khata/bank" },
-];
-
-const stockCards = [
-  { bn: "শীত স্টক", en: "Winter Cartons", icon: Snowflake, value: 0, gradient: "gradient-stat-blue", glow: "card-glow-blue", link: "/godown/stock" },
-  { bn: "গরম স্টক", en: "Summer Cartons", icon: Sun, value: 0, gradient: "gradient-stat-orange", glow: "card-glow-orange", link: "/godown/stock" },
-];
+const toBn = (n: number): string =>
+  Math.round(n).toLocaleString("en").replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const today = format(new Date(), "yyyy-MM-dd");
 
-  // Due alerts - top 5 parties with balance > 0
+  const { data: todayIncome = 0 } = useQuery({
+    queryKey: ["dash-today-income", today],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_transactions").select("amount").eq("type", "income").eq("date", today);
+      return data?.reduce((s, r) => s + Number(r.amount), 0) || 0;
+    },
+  });
+
+  const { data: todayExpense = 0 } = useQuery({
+    queryKey: ["dash-today-expense", today],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_transactions").select("amount").eq("type", "expense").eq("date", today);
+      return data?.reduce((s, r) => s + Number(r.amount), 0) || 0;
+    },
+  });
+
+  const { data: totalIncome = 0 } = useQuery({
+    queryKey: ["dash-total-income"],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_transactions").select("amount").eq("type", "income");
+      return data?.reduce((s, r) => s + Number(r.amount), 0) || 0;
+    },
+  });
+
+  const { data: totalExpense = 0 } = useQuery({
+    queryKey: ["dash-total-expense"],
+    queryFn: async () => {
+      const { data } = await supabase.from("daily_transactions").select("amount").eq("type", "expense");
+      return data?.reduce((s, r) => s + Number(r.amount), 0) || 0;
+    },
+  });
+
+  const { data: totalReceivable = 0 } = useQuery({
+    queryKey: ["dash-receivable"],
+    queryFn: async () => {
+      const { data } = await supabase.from("v_party_balance").select("current_balance").gt("current_balance", 0);
+      return data?.reduce((s, r) => s + Number(r.current_balance), 0) || 0;
+    },
+  });
+
+  const { data: totalLoanBorrowed = 0 } = useQuery({
+    queryKey: ["dash-loan-borrowed"],
+    queryFn: async () => {
+      const { data } = await supabase.from("loans").select("opening_balance").eq("direction", "borrowed").eq("is_active", true);
+      return data?.reduce((s, r) => s + Number(r.opening_balance), 0) || 0;
+    },
+  });
+
+  const { data: bankBalance = 0 } = useQuery({
+    queryKey: ["dash-bank"],
+    queryFn: async () => {
+      const { data } = await supabase.from("bank_accounts").select("opening_balance").eq("is_active", true);
+      return data?.reduce((s, r) => s + Number(r.opening_balance), 0) || 0;
+    },
+  });
+
+  const { data: stockData = [] } = useQuery({
+    queryKey: ["dash-stock"],
+    queryFn: async () => {
+      const { data } = await supabase.from("v_shoe_stock").select("season, current_cartons");
+      return data || [];
+    },
+  });
+
   const { data: dueParties = [] } = useQuery({
     queryKey: ["dashboard-due"],
     queryFn: async () => {
@@ -34,14 +83,33 @@ const Dashboard = () => {
     },
   });
 
-  // Low stock alerts - cartons < 5
   const { data: lowStock = [] } = useQuery({
     queryKey: ["dashboard-low-stock"],
     queryFn: async () => {
-      const { data } = await supabase.from("v_shoe_stock").select("*, articles:article_id(article_no)").lt("current_cartons", 5);
+      const { data } = await supabase.from("v_shoe_stock").select("*, articles:article_id(article_no)").lt("current_cartons", 5).gt("current_cartons", 0);
       return (data || []) as any[];
     },
   });
+
+  const actualBalance = totalIncome - totalExpense;
+  const remainingBalance = (totalIncome + totalReceivable) - (totalExpense + totalLoanBorrowed);
+  const cashBalance = Math.max(0, totalIncome - totalExpense - bankBalance);
+  const winterCartons = stockData.filter(s => s.season === "শীত" || s.season === "winter").reduce((s, r) => s + Number(r.current_cartons || 0), 0);
+  const summerCartons = stockData.filter(s => s.season === "গরম" || s.season === "summer").reduce((s, r) => s + Number(r.current_cartons || 0), 0);
+
+  const statCards = [
+    { bn: "আজকের আয়", en: "Today's Income", value: todayIncome, gradient: "gradient-stat-green", glow: "card-glow-green", icon: TrendingUp, link: "/khata/daily" },
+    { bn: "আজকের ব্যয়", en: "Today's Expense", value: todayExpense, gradient: "gradient-stat-red", glow: "card-glow-red", icon: TrendingDown, link: "/khata/daily" },
+    { bn: "বাস্তব ব্যালেন্স", en: "Actual Balance", value: actualBalance, gradient: "gradient-stat-blue", glow: "card-glow-blue", icon: Wallet, link: "/khata/combined" },
+    { bn: "অবশিষ্ট ব্যালেন্স", en: "Remaining Balance", value: remainingBalance, gradient: "gradient-stat-deep-purple", glow: "card-glow-deep-purple", icon: Calculator, formula: "(আয়+পাওনা) − (ব্যয়+দেনা)", link: "/summary/master" },
+    { bn: "নগদ", en: "Cash", value: cashBalance, gradient: "gradient-stat-teal", glow: "card-glow-teal", icon: Banknote, link: "/khata/cash" },
+    { bn: "ব্যাংক", en: "Bank", value: bankBalance, gradient: "gradient-stat-purple", glow: "card-glow-purple", icon: Building2, link: "/khata/bank" },
+  ];
+
+  const stockCards = [
+    { bn: "শীত স্টক", en: "Winter Cartons", value: winterCartons, gradient: "gradient-stat-blue", glow: "card-glow-blue", icon: Snowflake, link: "/godown/stock" },
+    { bn: "গরম স্টক", en: "Summer Cartons", value: summerCartons, gradient: "gradient-stat-orange", glow: "card-glow-orange", icon: Sun, link: "/godown/stock" },
+  ];
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -52,7 +120,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {statCards.map((card) => (
           <div key={card.en} onClick={() => navigate(card.link)}
@@ -70,16 +137,15 @@ const Dashboard = () => {
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity -mt-3" />
                 </div>
               </div>
-              <p className="text-2xl md:text-3xl font-extrabold font-bengali tracking-tight">৳{toBengaliDigits(card.value)}</p>
-              {"formula" in card && card.formula && (
-                <p className="text-[10px] opacity-60 mt-1.5 font-bengali bg-white/10 inline-block px-2 py-0.5 rounded-full">{card.formula}</p>
+              <p className="text-2xl md:text-3xl font-extrabold font-bengali tracking-tight">৳{toBn(card.value)}</p>
+              {"formula" in card && (card as any).formula && (
+                <p className="text-[10px] opacity-60 mt-1.5 font-bengali bg-white/10 inline-block px-2 py-0.5 rounded-full">{(card as any).formula}</p>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Stock Cards */}
       <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4">
         {stockCards.map((card) => (
           <div key={card.en} onClick={() => navigate(card.link)}
@@ -96,15 +162,13 @@ const Dashboard = () => {
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity -mt-3" />
                 </div>
               </div>
-              <p className="text-2xl md:text-3xl font-extrabold font-bengali tracking-tight">৳{toBengaliDigits(card.value)}</p>
+              <p className="text-2xl md:text-3xl font-extrabold font-bengali tracking-tight">{toBn(card.value)} কার্টন</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Alert Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-6">
-        {/* Due Alert */}
         <div className="bg-card border border-destructive/20 rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-xl bg-destructive/10"><AlertTriangle className="h-5 w-5 text-destructive" /></div>
@@ -118,7 +182,7 @@ const Dashboard = () => {
               {dueParties.map((p: any) => (
                 <div key={p.party_id} className="flex justify-between text-sm px-2">
                   <span className="font-bengali text-foreground">{p.name}</span>
-                  <span className="font-bold text-destructive">৳{Number(p.current_balance || 0).toLocaleString()}</span>
+                  <span className="font-bold text-destructive">৳{toBn(Number(p.current_balance || 0))}</span>
                 </div>
               ))}
             </div>
@@ -126,7 +190,6 @@ const Dashboard = () => {
           <button onClick={() => navigate("/party/all-balance")} className="text-xs text-primary hover:underline font-bengali">বিস্তারিত দেখুন →</button>
         </div>
 
-        {/* Low Stock Alert */}
         <div className="bg-card border border-orange-500/20 rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-xl bg-orange-500/10"><PackageOpen className="h-5 w-5 text-orange-500" /></div>
@@ -140,7 +203,7 @@ const Dashboard = () => {
               {lowStock.slice(0, 5).map((s: any, i: number) => (
                 <div key={i} className="flex justify-between text-sm px-2">
                   <span className="font-bengali text-foreground">{s.articles?.article_no || "?"}</span>
-                  <span className="font-bold text-orange-500">{s.current_cartons} কার্টন</span>
+                  <span className="font-bold text-orange-500">{toBn(s.current_cartons)} কার্টন</span>
                 </div>
               ))}
             </div>
