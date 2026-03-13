@@ -68,7 +68,7 @@ const menuItems: MenuItem[] = [
       { bn: "বিক্রয় তালিকা", path: "/sales/list" },
       { bn: "পার্টি লেজার", path: "/party/ledger" },
       { bn: "পার্টি পেমেন্ট", path: "/parties/payment" },
-      { bn: "সব পার্টি ব্যালেন্স", path: "/party/all-balance" },
+      { bn: "পার্টি ম্যানেজমেন্ট", path: "/party/all-balance" },
     ],
   },
   {
