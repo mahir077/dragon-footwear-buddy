@@ -19,7 +19,8 @@ const IncomeHeadsPage = () => {
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("income_heads").insert({ name_bn: nameBn, name_en: nameEn || null });
+      const { error } = await supabase.from("income_heads").insert({ name_bn: nameBn });
+
       if (error) throw error;
     },
     onSuccess: () => {

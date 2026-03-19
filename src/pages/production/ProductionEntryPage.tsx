@@ -11,17 +11,23 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import EntryCustomFields from "@/components/EntryCustomFields";
+import EntryAttachment from "@/components/EntryAttachment";
 
 const toBn = (n: number) => n.toString().replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
 const ProductionEntryPage = () => {
   const qc = useQueryClient();
+
+  // ✅ Pre-generated entryId
+  const [entryId, setEntryId] = useState(() => crypto.randomUUID());
+
   const [date, setDate] = useState<Date>(new Date());
   const [brandId, setBrandId] = useState("");
   const [modelId, setModelId] = useState("");
   const [articleId, setArticleId] = useState("");
   const [colorId, setColorId] = useState("");
-  const [season, setSeason] = useState("winter");
+  const [season, setSeason] = useState("শীত");
   const [locationId, setLocationId] = useState("");
   const [fullCartons, setFullCartons] = useState(0);
   const [shortCartons, setShortCartons] = useState(0);
@@ -46,12 +52,13 @@ const ProductionEntryPage = () => {
   const saveMut = useMutation({
     mutationFn: async () => {
       const { data: prod, error } = await supabase.from("productions").insert({
+        id: entryId,
         date: format(date, "yyyy-MM-dd"),
         brand_id: brandId || null,
         model_id: modelId || null,
         article_id: articleId || null,
         color_id: colorId || null,
-        season: season === "winter" ? "শীত" : "গরম",
+        season: season,
         location_id: locationId || null,
         full_cartons: fullCartons,
         short_cartons: shortCartons,
@@ -62,12 +69,11 @@ const ProductionEntryPage = () => {
       }).select().single();
       if (error) throw error;
 
-      // Insert stock movement
       const { error: e2 } = await supabase.from("stock_movements").insert({
         date: format(date, "yyyy-MM-dd"),
         article_id: articleId || null,
         color_id: colorId || null,
-        season: season === "winter" ? "শীত" : "গরম",
+        season: season,
         to_location_id: locationId || null,
         cartons: fullCartons + shortCartons + extraCartons,
         pairs: totalPairs,
@@ -80,6 +86,8 @@ const ProductionEntryPage = () => {
       toast.success("সফলভাবে সংরক্ষিত হয়েছে ✅");
       qc.invalidateQueries({ queryKey: ["productions"] });
       setFullCartons(0); setShortCartons(0); setExtraCartons(0); setNote("");
+      // ✅ Next entry-র জন্য নতুন ID
+      setEntryId(crypto.randomUUID());
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -149,10 +157,10 @@ const ProductionEntryPage = () => {
         <div>
           <Label className="font-bengali text-sm mb-2 block">সিজন</Label>
           <div className="flex gap-2">
-            <button onClick={() => setSeason("winter")} className={`flex-1 py-3 rounded-lg text-sm font-bengali font-bold transition-all ${season === "winter" ? "bg-blue-600 text-white ring-2 ring-offset-1" : "bg-muted"}`}>
+            <button onClick={() => setSeason("শীত")} className={`flex-1 py-3 rounded-lg text-sm font-bengali font-bold transition-all ${season === "শীত" ? "bg-blue-600 text-white ring-2 ring-offset-1" : "bg-muted"}`}>
               ❄️ শীত
             </button>
-            <button onClick={() => setSeason("summer")} className={`flex-1 py-3 rounded-lg text-sm font-bengali font-bold transition-all ${season === "summer" ? "bg-orange-500 text-white ring-2 ring-offset-1" : "bg-muted"}`}>
+            <button onClick={() => setSeason("গরম")} className={`flex-1 py-3 rounded-lg text-sm font-bengali font-bold transition-all ${season === "গরম" ? "bg-orange-500 text-white ring-2 ring-offset-1" : "bg-muted"}`}>
               ☀️ গরম
             </button>
           </div>
@@ -173,12 +181,19 @@ const ProductionEntryPage = () => {
 
         <div><Label className="font-bengali text-xs">নোট</Label><Input value={note} onChange={(e) => setNote(e.target.value)} className="text-sm" /></div>
 
+        {/* ✅ Custom Fields + Attachment */}
+        <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
+          <p className="text-sm font-bold font-bengali">অতিরিক্ত তথ্য</p>
+          <EntryCustomFields module="production" entryId={entryId} />
+          <EntryAttachment module="production" entryId={entryId} />
+        </div>
+
         <Button
           onClick={() => saveMut.mutate()}
           disabled={saveMut.isPending}
           className="w-full bg-green-600 hover:bg-green-700 text-white text-base font-bengali font-bold py-5"
         >
-          উৎপাদন সংরক্ষণ করুন
+          {saveMut.isPending ? "সংরক্ষণ হচ্ছে..." : "উৎপাদন সংরক্ষণ করুন"}
         </Button>
       </div>
     </div>

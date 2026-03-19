@@ -15,6 +15,7 @@ const menuItems: MenuItem[] = [
   {
     bn: "সেটআপ", icon: Settings,
     children: [
+      { bn: "কাঁচামাল", path: "/setup/raw-materials" },
       { bn: "ব্র্যান্ড", path: "/setup/brands" },
       { bn: "মডেল", path: "/setup/models" },
       { bn: "আর্টিকেল", path: "/setup/articles" },
@@ -112,6 +113,17 @@ const menuItems: MenuItem[] = [
   { bn: "বর্জ্য বিক্রি", icon: Recycle, path: "/waste/sale" },
   { bn: "রেজিস্টার", icon: ClipboardList, path: "/register" },
   { bn: "এক্সেল", icon: FileSpreadsheet, path: "/excel" },
+  {
+  bn: "একাউন্টিং", icon: BookOpen,
+  children: [
+    { bn: "হিসাবের তালিকা", path: "/accounting/chart-of-accounts" },
+    { bn: "জার্নাল", path: "/accounting/journal" },
+    { bn: "ট্রায়াল ব্যালেন্স", path: "/accounting/trial-balance" },
+    { bn: "লাভ-ক্ষতি", path: "/accounting/profit-loss" },
+    { bn: "ব্যালেন্স শিট", path: "/accounting/balance-sheet" },
+    { bn: "মাসিক ব্যয়", path: "/accounting/monthly-expense" },
+  ],
+},
   {
     bn: "সারসংক্ষেপ", icon: BarChart3,
     children: [

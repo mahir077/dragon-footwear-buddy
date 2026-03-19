@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
+import { journalRentPayment } from "@/lib/autoJournal";
 
 const toBn = (n: number) => n.toLocaleString("bn-BD");
 
@@ -88,10 +89,15 @@ const RentPage = ({ rentType, title, subtitle }: RentPageProps) => {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast({ title: "লেনদেন সংরক্ষিত ✅" }); qc.invalidateQueries({ queryKey: ["rent-tx"] }); setTxOpen(false);
-      setTxForm({ type: "due", amount: 0, date: format(new Date(), "yyyy-MM-dd"), note: "" });
-    },
+    // পরে
+onSuccess: () => {
+  // ✅ Auto journal — শুধু payment হলে
+  if (txForm.type === "paid" && txForm.amount > 0 && selectedId) {
+    journalRentPayment(selectedId, txForm.date, txForm.amount, activeYear?.id);
+  }
+  toast({ title: "লেনদেন সংরক্ষিত ✅" }); qc.invalidateQueries({ queryKey: ["rent-tx"] }); setTxOpen(false);
+  setTxForm({ type: "due", amount: 0, date: format(new Date(), "yyyy-MM-dd"), note: "" });
+},
     onError: (e: any) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
   });
 

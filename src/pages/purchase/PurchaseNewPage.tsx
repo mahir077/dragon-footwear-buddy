@@ -11,6 +11,9 @@ import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { journalCashPurchase, journalCreditPurchase } from "@/lib/autoJournal";
+import EntryCustomFields from "@/components/EntryCustomFields";
+import EntryAttachment from "@/components/EntryAttachment";
 
 const toBn = (n: number) => n.toString().replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
@@ -24,6 +27,10 @@ type PurchaseItem = {
 
 const PurchaseNewPage = () => {
   const qc = useQueryClient();
+
+  // ✅ Pre-generated entryId
+  const [entryId] = useState(() => crypto.randomUUID());
+
   const [date, setDate] = useState<Date>(new Date());
   const [memoNo, setMemoNo] = useState("");
   const [supplierId, setSupplierId] = useState("");
@@ -69,7 +76,6 @@ const PurchaseNewPage = () => {
     },
   });
 
-  // Auto memo
   useEffect(() => {
     supabase.from("purchases").select("id", { count: "exact", head: true }).then(({ count }) => {
       setMemoNo(`PUR-${String((count || 0) + 1).padStart(3, "0")}`);
@@ -99,6 +105,7 @@ const PurchaseNewPage = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { data: purchase, error } = await supabase.from("purchases").insert({
+        id: entryId,
         date: format(date, "yyyy-MM-dd"),
         memo_no: memoNo,
         supplier_id: supplierId || null,
@@ -123,9 +130,17 @@ const PurchaseNewPage = () => {
         const { error: e2 } = await supabase.from("purchase_items").insert(purchaseItems);
         if (e2) throw e2;
       }
-      return purchase;
+
+      return { id: purchase.id, dateStr: format(date, "yyyy-MM-dd") };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      if (data) {
+                if (paymentMode === "cash" || paymentMode === "bank") {
+          await journalCashPurchase(data.id, data.dateStr, total, activeYear?.id);
+        } else {
+          await journalCreditPurchase(data.id, data.dateStr, total, activeYear?.id);
+}
+      }
       toast.success("সফলভাবে সংরক্ষিত হয়েছে ✅");
       qc.invalidateQueries({ queryKey: ["purchases"] });
       setItems([{ material_id: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
@@ -141,7 +156,6 @@ const PurchaseNewPage = () => {
       <p className="text-xs text-muted-foreground mb-4">New Purchase</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        {/* Date */}
         <div>
           <Label className="font-bengali text-sm">তারিখ</Label>
           <Popover>
@@ -154,12 +168,10 @@ const PurchaseNewPage = () => {
             <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} className="p-3 pointer-events-auto" /></PopoverContent>
           </Popover>
         </div>
-        {/* Memo */}
         <div>
           <Label className="font-bengali text-sm">মেমো নং</Label>
           <Input value={memoNo} onChange={(e) => setMemoNo(e.target.value)} className="text-sm" />
         </div>
-        {/* Supplier */}
         <div>
           <Label className="font-bengali text-sm">সরবরাহকারী</Label>
           <Select value={supplierId} onValueChange={setSupplierId}>
@@ -178,13 +190,10 @@ const PurchaseNewPage = () => {
             { val: "credit", label: "🔵 বাকি", cls: "bg-blue-600" },
             { val: "bank", label: "🟣 ব্যাংক", cls: "bg-purple-600" },
           ].map((m) => (
-            <button
-              key={m.val}
-              onClick={() => setPaymentMode(m.val)}
+            <button key={m.val} onClick={() => setPaymentMode(m.val)}
               className={`flex-1 py-2.5 rounded-lg text-sm font-bengali font-bold text-white transition-all ${
                 paymentMode === m.val ? m.cls + " ring-2 ring-offset-1 ring-white shadow-lg" : "bg-muted text-muted-foreground"
-              }`}
-            >
+              }`}>
               {m.label}
             </button>
           ))}
@@ -250,11 +259,15 @@ const PurchaseNewPage = () => {
         <Input value={note} onChange={(e) => setNote(e.target.value)} className="text-sm" />
       </div>
 
-      <Button
-        onClick={() => saveMutation.mutate()}
-        disabled={saveMutation.isPending}
-        className="w-full bg-green-600 hover:bg-green-700 text-white text-base font-bengali font-bold py-5"
-      >
+      {/* ✅ Custom Fields + Attachment */}
+      <div className="border rounded-lg p-4 mb-4 space-y-3 bg-muted/20">
+        <p className="text-sm font-bold font-bengali">অতিরিক্ত তথ্য</p>
+        <EntryCustomFields module="purchase" entryId={entryId} />
+        <EntryAttachment module="purchase" entryId={entryId} />
+      </div>
+
+      <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
+        className="w-full bg-green-600 hover:bg-green-700 text-white text-base font-bengali font-bold py-5">
         ক্রয় সংরক্ষণ করুন
       </Button>
     </div>

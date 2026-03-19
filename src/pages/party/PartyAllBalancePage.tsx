@@ -40,7 +40,7 @@ const PartyAllBalancePage = () => {
   const { data: years } = useQuery({
     queryKey: ["active-year"],
     queryFn: async () => {
-      const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).single();
+      const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle();
       return data;
     },
   });
@@ -59,18 +59,33 @@ const PartyAllBalancePage = () => {
   const totalReceivable = filtered.filter((p: any) => p.current_balance > 0).reduce((s: number, p: any) => s + p.current_balance, 0);
   const totalPayable = filtered.filter((p: any) => p.current_balance < 0).reduce((s: number, p: any) => s + Math.abs(p.current_balance), 0);
 
+  const openModal = (partyId: string, partyName: string, type: "receipt" | "payment" | "advance" | "dismiss", currentBalance: number) => {
+    setModal({ partyId, partyName, type });
+    // ✅ dismiss হলে current balance auto-fill করো
+    setModalAmount(type === "dismiss" ? Math.abs(currentBalance) : 0);
+    setModalNote("");
+    setOpenMenu(null);
+  };
+
   const quickActionMutation = useMutation({
     mutationFn: async () => {
       if (!modal || !modalAmount || modalAmount <= 0) throw new Error("সঠিক পরিমাণ দিন");
+
+      // ✅ Fixed: dismiss আলাদাভাবে handle
+      const paymentType = modal.type === "payment" ? "payment"
+        : modal.type === "dismiss" ? "dismiss"
+        : "receipt";
+
       await (supabase as any).from("party_payments").insert({
         date: format(new Date(), "yyyy-MM-dd"),
         party_id: modal.partyId,
-        type: modal.type === "payment" ? "payment" : "receipt",
+        type: paymentType,
         amount: modalAmount,
         payment_mode: modalMode,
         note: modalNote || modal.type,
         year_id: years?.id || null,
       });
+
       await supabase.from("daily_transactions").insert({
         date: format(new Date(), "yyyy-MM-dd"),
         type: modal.type === "payment" ? "expense" : "income",
@@ -176,11 +191,11 @@ const PartyAllBalancePage = () => {
                 <td className="p-3 text-right font-bengali">৳{(p.sales_due !== undefined ? (p.sales_due + (p.total_received || 0)) : 0).toLocaleString()}</td>
                 <td className="p-3 text-right text-green-600 font-bold font-bengali">৳{(p.total_received || 0).toLocaleString()}</td>
                 <td className={`p-3 text-right font-bold font-bengali ${p.current_balance > 0 ? "text-red-600" : p.current_balance < 0 ? "text-blue-600" : "text-green-600"}`}>
-                  {p.current_balance > 0 
-                  ? (p.type === "supplier" ? "দেনা " : "পাওনা ") 
-                  : p.current_balance < 0 
-                  ? "অগ্রিম " 
-                  : "✓ "}
+                  {p.current_balance > 0
+                    ? (p.type === "supplier" ? "দেনা " : "পাওনা ")
+                    : p.current_balance < 0
+                    ? "অগ্রিম "
+                    : "✓ "}
                   ৳{Math.abs(p.current_balance).toLocaleString()}
                 </td>
                 <td className="p-3 text-center">
@@ -203,25 +218,28 @@ const PartyAllBalancePage = () => {
                             <Eye className="w-4 h-4 text-blue-500" /> লেজার দেখুন
                           </button>
                           {(p.type === "customer" || p.type === "both") && (
-                            <button onClick={() => { setModal({ partyId: p.id, partyName: p.name, type: "receipt" }); setOpenMenu(null); }}
+                            <button onClick={() => openModal(p.id, p.name, "receipt", p.current_balance)}
                               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">
                               <ArrowDownCircle className="w-4 h-4 text-green-500" /> টাকা আদায়
                             </button>
                           )}
                           {(p.type === "supplier" || p.type === "both") && (
-                            <button onClick={() => { setModal({ partyId: p.id, partyName: p.name, type: "payment" }); setOpenMenu(null); }}
+                            <button onClick={() => openModal(p.id, p.name, "payment", p.current_balance)}
                               className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">
                               <ArrowUpCircle className="w-4 h-4 text-red-500" /> টাকা প্রদান
                             </button>
                           )}
-                          <button onClick={() => { setModal({ partyId: p.id, partyName: p.name, type: "advance" }); setOpenMenu(null); }}
+                          <button onClick={() => openModal(p.id, p.name, "advance", p.current_balance)}
                             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">
                             <Gift className="w-4 h-4 text-blue-500" /> অগ্রিম
                           </button>
-                          <button onClick={() => { setModal({ partyId: p.id, partyName: p.name, type: "dismiss" }); setOpenMenu(null); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">
-                            <DollarSign className="w-4 h-4 text-orange-500" /> বাকি মাফ
-                          </button>
+                          {/* ✅ dismiss — only show if balance > 0 */}
+                          {p.current_balance > 0 && (
+                            <button onClick={() => openModal(p.id, p.name, "dismiss", p.current_balance)}
+                              className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">
+                              <DollarSign className="w-4 h-4 text-orange-500" /> বাকি মাফ
+                            </button>
+                          )}
                           <hr className="my-1" />
                           <button onClick={() => { navigate(`/setup/parties?edit=${p.id}`); setOpenMenu(null); }}
                             className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted font-bengali text-sm">

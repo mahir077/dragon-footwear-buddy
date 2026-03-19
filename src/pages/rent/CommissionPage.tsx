@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus } from "lucide-react";
+import { journalCommissionAccrual, journalCommissionPayment } from "@/lib/autoJournal";
+import { format } from "date-fns";
 
 const toBn = (n: number) => n.toLocaleString("bn-BD");
 const monthsBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
@@ -21,16 +23,27 @@ const CommissionPage = () => {
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ party_id: "", month: now.getMonth() + 1, commission_amount: 0, paid_amount: 0 });
+  const [form, setForm] = useState({
+    party_id: "",
+    month: now.getMonth() + 1,
+    commission_amount: 0,
+    paid_amount: 0,
+  });
 
   const { data: activeYear } = useQuery({
     queryKey: ["activeYear"],
-    queryFn: async () => { const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle(); return data; },
+    queryFn: async () => {
+      const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle();
+      return data;
+    },
   });
 
   const { data: parties = [] } = useQuery({
     queryKey: ["parties"],
-    queryFn: async () => { const { data } = await supabase.from("parties").select("*").eq("is_active", true).order("name"); return data || []; },
+    queryFn: async () => {
+      const { data } = await supabase.from("parties").select("*").eq("is_active", true).order("name");
+      return data || [];
+    },
   });
 
   const { data: ledgers = [] } = useQuery({
@@ -45,21 +58,35 @@ const CommissionPage = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("commission_ledgers").insert({
-        party_id: form.party_id, month: form.month,
-        commission_amount: form.commission_amount, paid_amount: form.paid_amount,
+      const { data: ledger, error } = await supabase.from("commission_ledgers").insert({
+        party_id: form.party_id,
+        month: form.month,
+        commission_amount: form.commission_amount,
+        paid_amount: form.paid_amount,
         year_id: activeYear?.id || null,
-      });
+      }).select().single();
       if (error) throw error;
+      return ledger;
     },
-    onSuccess: () => {
-      toast({ title: "কমিশন সংরক্ষিত ✅" }); qc.invalidateQueries({ queryKey: ["commission-ledgers"] }); setOpen(false);
+    onSuccess: (data) => {
+      // ✅ Auto journal
+      const dateStr = format(new Date(), "yyyy-MM-dd");
+      if (data) {
+        if (form.commission_amount > 0) {
+          journalCommissionAccrual(data.id, dateStr, form.commission_amount, activeYear?.id);
+        }
+        if (form.paid_amount > 0) {
+          journalCommissionPayment(data.id, dateStr, form.paid_amount, activeYear?.id);
+        }
+      }
+      toast({ title: "কমিশন সংরক্ষিত ✅" });
+      qc.invalidateQueries({ queryKey: ["commission-ledgers"] });
+      setOpen(false);
       setForm({ party_id: "", month: now.getMonth() + 1, commission_amount: 0, paid_amount: 0 });
     },
     onError: (e: any) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
   });
 
-  // Group by party
   const partyGroups = useMemo(() => {
     const map: Record<string, { name: string; entries: typeof ledgers }> = {};
     ledgers.forEach((l) => {
@@ -77,7 +104,10 @@ const CommissionPage = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h1 className="text-2xl font-extrabold">কমিশন</h1><p className="text-sm text-muted-foreground">Commission Ledger</p></div>
+        <div>
+          <h1 className="text-2xl font-extrabold">কমিশন</h1>
+          <p className="text-sm text-muted-foreground">Commission Ledger</p>
+        </div>
         <div className="flex gap-2 items-center">
           <Select value={String(month)} onValueChange={(v) => setMonth(+v)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -102,9 +132,17 @@ const CommissionPage = () => {
                     <SelectContent>{monthsBn.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>কমিশন (৳)</Label><Input type="number" value={form.commission_amount || ""} onChange={(e) => setForm((p) => ({ ...p, commission_amount: +e.target.value }))} /></div>
-                <div><Label>পরিশোধ (৳)</Label><Input type="number" value={form.paid_amount || ""} onChange={(e) => setForm((p) => ({ ...p, paid_amount: +e.target.value }))} /></div>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.party_id || saveMutation.isPending} className="w-full">সংরক্ষণ করুন</Button>
+                <div>
+                  <Label>কমিশন (৳)</Label>
+                  <Input type="number" value={form.commission_amount || ""} onChange={(e) => setForm((p) => ({ ...p, commission_amount: +e.target.value }))} />
+                </div>
+                <div>
+                  <Label>পরিশোধ (৳)</Label>
+                  <Input type="number" value={form.paid_amount || ""} onChange={(e) => setForm((p) => ({ ...p, paid_amount: +e.target.value }))} />
+                </div>
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.party_id || saveMutation.isPending} className="w-full">
+                  সংরক্ষণ করুন
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -116,13 +154,17 @@ const CommissionPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>পার্টি</TableHead><TableHead className="text-right">Opening</TableHead>
-                <TableHead className="text-right">এই মাসে</TableHead><TableHead className="text-right">পরিশোধ</TableHead>
+                <TableHead>পার্টি</TableHead>
+                <TableHead className="text-right">Opening</TableHead>
+                <TableHead className="text-right">এই মাসে</TableHead>
+                <TableHead className="text-right">পরিশোধ</TableHead>
                 <TableHead className="text-right">Closing</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {partyGroups.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">কোনো তথ্য নেই</TableCell></TableRow>}
+              {partyGroups.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">কোনো তথ্য নেই</TableCell></TableRow>
+              )}
               {partyGroups.map(([pid, group]) => {
                 const prevEntries = group.entries.filter((e) => (e.month || 0) < month + 1);
                 const opening = prevEntries.reduce((s, e) => s + (e.commission_amount || 0) - (e.paid_amount || 0), 0);
@@ -136,7 +178,9 @@ const CommissionPage = () => {
                     <TableCell className="text-right">৳{toBn(opening)}</TableCell>
                     <TableCell className="text-right text-primary">৳{toBn(thisCommission)}</TableCell>
                     <TableCell className="text-right text-green-600">৳{toBn(thisPaid)}</TableCell>
-                    <TableCell className={`text-right font-bold ${closing > 0 ? "text-destructive" : "text-green-600"}`}>৳{toBn(closing)}</TableCell>
+                    <TableCell className={`text-right font-bold ${closing > 0 ? "text-destructive" : "text-green-600"}`}>
+                      ৳{toBn(closing)}
+                    </TableCell>
                   </TableRow>
                 );
               })}

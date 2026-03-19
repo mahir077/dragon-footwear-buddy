@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Wallet, Banknote, Building2, Calculator, Snowflake, Sun, AlertTriangle, PackageOpen, ArrowUpRight, Moon } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Banknote, Building2, Calculator, Snowflake, Sun, AlertTriangle, PackageOpen, ArrowUpRight, Moon, Scale, Package } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -9,11 +9,16 @@ const toBn = (n: number): string =>
   Math.round(n).toLocaleString("en").replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
 
 const Dashboard = () => {
-  
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  
   const today = format(new Date(), "yyyy-MM-dd");
+  const now = new Date();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+  const currentYear = String(now.getFullYear());
+  const startDate = `${currentYear}-${currentMonth}-01`;
+  const endDate = `${currentYear}-${currentMonth}-31`;
+
+  const db = supabase as any;
 
   const { data: todayIncome = 0 } = useQuery({
     queryKey: ["dash-today-income", today],
@@ -63,11 +68,28 @@ const Dashboard = () => {
     },
   });
 
+  const { data: cashBalance = 0 } = useQuery({
+    queryKey: ["dash-cash"],
+    queryFn: async () => {
+      const { data } = await db.from("v_cash_balance").select("cash_balance").single();
+      return Number(data?.cash_balance) || 0;
+    },
+  });
+
   const { data: bankBalance = 0 } = useQuery({
     queryKey: ["dash-bank"],
     queryFn: async () => {
-      const { data } = await supabase.from("bank_accounts").select("opening_balance").eq("is_active", true);
-      return data?.reduce((s, r) => s + Number(r.opening_balance), 0) || 0;
+      const { data } = await db.from("v_bank_balance").select("bank_balance");
+      return (data as any[])?.reduce((s, r) => s + Number(r.bank_balance), 0) || 0;
+    },
+  });
+
+  // ✅ Stock Value from v_stock_valuation
+  const { data: stockValue = 0 } = useQuery({
+    queryKey: ["dash-stock-value"],
+    queryFn: async () => {
+      const { data } = await db.from("v_stock_valuation").select("stock_value");
+      return (data as any[])?.reduce((s, r) => s + Number(r.stock_value || 0), 0) || 0;
     },
   });
 
@@ -95,9 +117,49 @@ const Dashboard = () => {
     },
   });
 
+  const { data: journalSnapshot = [] } = useQuery({
+    queryKey: ["dash-journal-snapshot", currentMonth, currentYear],
+    queryFn: async () => {
+      const { data } = await db.from("journal_lines")
+        .select("debit, credit, chart_of_accounts!inner(account_type), journal_entries!inner(date)")
+        .gte("journal_entries.date", startDate)
+        .lte("journal_entries.date", endDate);
+      return data || [];
+    },
+  });
+
+  const netProfit = (() => {
+    if (!journalSnapshot.length) return 0;
+    const totalIncomePL = journalSnapshot
+      .filter((l: any) => l.chart_of_accounts?.account_type === "income")
+      .reduce((s: number, l: any) => s + (Number(l.credit) - Number(l.debit)), 0);
+    const totalExpensePL = journalSnapshot
+      .filter((l: any) => l.chart_of_accounts?.account_type === "expense")
+      .reduce((s: number, l: any) => s + (Number(l.debit) - Number(l.credit)), 0);
+    return totalIncomePL - totalExpensePL;
+  })();
+
+  const totalAssets = (() => {
+    return journalSnapshot
+      .filter((l: any) => l.chart_of_accounts?.account_type === "asset")
+      .reduce((s: number, l: any) => s + (Number(l.debit) - Number(l.credit)), 0);
+  })();
+
+  const totalLiabilities = (() => {
+    return journalSnapshot
+      .filter((l: any) => l.chart_of_accounts?.account_type === "liability")
+      .reduce((s: number, l: any) => s + (Number(l.credit) - Number(l.debit)), 0);
+  })();
+
+  const totalCapital = (() => {
+    const capital = journalSnapshot
+      .filter((l: any) => l.chart_of_accounts?.account_type === "capital")
+      .reduce((s: number, l: any) => s + (Number(l.credit) - Number(l.debit)), 0);
+    return capital + netProfit;
+  })();
+
   const actualBalance = totalIncome - totalExpense;
   const remainingBalance = (totalIncome + totalReceivable) - (totalExpense + totalLoanBorrowed);
-  const cashBalance = Math.max(0, totalIncome - totalExpense - bankBalance);
   const winterCartons = stockData.filter(s => s.season === "শীত" || s.season === "winter").reduce((s, r) => s + Number(r.current_cartons || 0), 0);
   const summerCartons = stockData.filter(s => s.season === "গরম" || s.season === "summer").reduce((s, r) => s + Number(r.current_cartons || 0), 0);
 
@@ -108,6 +170,8 @@ const Dashboard = () => {
     { bn: "অবশিষ্ট ব্যালেন্স", en: "Remaining Balance", value: remainingBalance, gradient: "gradient-stat-deep-purple", glow: "card-glow-deep-purple", icon: Calculator, formula: "(আয়+পাওনা) − (ব্যয়+দেনা)", link: "/summary/master" },
     { bn: "নগদ", en: "Cash", value: cashBalance, gradient: "gradient-stat-teal", glow: "card-glow-teal", icon: Banknote, link: "/khata/cash" },
     { bn: "ব্যাংক", en: "Bank", value: bankBalance, gradient: "gradient-stat-purple", glow: "card-glow-purple", icon: Building2, link: "/khata/bank" },
+    // ✅ Stock Value card
+    { bn: "স্টক মূল্য", en: "Stock Value", value: stockValue, gradient: "gradient-stat-orange", glow: "card-glow-orange", icon: Package, link: "/godown/stock" },
   ];
 
   const stockCards = [
@@ -122,15 +186,60 @@ const Dashboard = () => {
           <h1 className="text-3xl md:text-4xl font-extrabold font-bengali mb-0.5 text-foreground">ড্যাশবোর্ড</h1>
           <p className="text-sm text-muted-foreground tracking-wide">Dashboard Overview</p>
         </div>
-        <button
-    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-sm font-bengali font-medium transition-all"
-  >
-    <Sun className="w-4 h-4 dark:hidden" />
-    <Moon className="w-4 h-4 hidden dark:block" />
-    <span className="dark:hidden">ডার্ক মোড</span>
-    <span className="hidden dark:block">লাইট মোড</span>
-  </button>
+        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-sm font-bengali font-medium transition-all">
+          <Sun className="w-4 h-4 dark:hidden" />
+          <Moon className="w-4 h-4 hidden dark:block" />
+          <span className="dark:hidden">ডার্ক মোড</span>
+          <span className="hidden dark:block">লাইট মোড</span>
+        </button>
+      </div>
+
+      {/* ✅ Net Profit Card */}
+      <div onClick={() => navigate("/accounting/profit-loss")}
+        className={`mb-4 group relative text-white rounded-2xl p-4 md:p-5 cursor-pointer hover:scale-[1.01] active:scale-[0.97] transition-all duration-200 overflow-hidden ${netProfit >= 0 ? "gradient-stat-green card-glow-green" : "gradient-stat-red card-glow-red"}`}>
+        <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10 blur-sm" />
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h3 className="text-base md:text-lg font-extrabold font-bengali">
+              {netProfit >= 0 ? "✅ এই মাসের নিট লাভ" : "❌ এই মাসের নিট ক্ষতি"}
+            </h3>
+            <p className="text-xs opacity-70 uppercase tracking-widest">Net Profit — {now.toLocaleString("bn-BD", { month: "long" })}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-2xl md:text-3xl font-extrabold font-bengali">৳{toBn(Math.abs(netProfit))}</p>
+            <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-70 transition-opacity" />
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ Balance Sheet Snapshot */}
+      <div onClick={() => navigate("/accounting/balance-sheet")}
+        className="mb-4 cursor-pointer hover:shadow-md transition-all bg-card border rounded-2xl p-4 md:p-5 group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-500/10"><Scale className="h-5 w-5 text-blue-600" /></div>
+            <div>
+              <h3 className="text-base font-bold font-bengali text-foreground">ব্যালেন্স শিট স্ন্যাপশট</h3>
+              <p className="text-xs text-muted-foreground">Balance Sheet — {now.toLocaleString("bn-BD", { month: "long" })}</p>
+            </div>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3 text-center">
+            <p className="text-xs font-bengali text-blue-600 dark:text-blue-400">মোট সম্পদ</p>
+            <p className="text-lg font-extrabold font-bengali text-blue-700 dark:text-blue-300">৳{toBn(Math.abs(totalAssets))}</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-950/30 rounded-xl p-3 text-center">
+            <p className="text-xs font-bengali text-red-600 dark:text-red-400">মোট দায়</p>
+            <p className="text-lg font-extrabold font-bengali text-red-700 dark:text-red-300">৳{toBn(Math.abs(totalLiabilities))}</p>
+          </div>
+          <div className="bg-purple-50 dark:bg-purple-950/30 rounded-xl p-3 text-center">
+            <p className="text-xs font-bengali text-purple-600 dark:text-purple-400">মোট মূলধন</p>
+            <p className="text-lg font-extrabold font-bengali text-purple-700 dark:text-purple-300">৳{toBn(Math.abs(totalCapital))}</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">

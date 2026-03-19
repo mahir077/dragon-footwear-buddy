@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const monthsBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
@@ -16,7 +15,6 @@ const statusConfig: Record<string, { icon: string; bg: string }> = {
 };
 
 type CellData = { status: string; late_minutes: number; overtime_hours: number; id?: string };
-
 const toBn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
 
 const AttendancePage = () => {
@@ -25,13 +23,13 @@ const AttendancePage = () => {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
-  // map: "empId-YYYY-MM-DD" -> CellData
   const [cells, setCells] = useState<Record<string, CellData>>({});
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const pad = (n: number) => String(n).padStart(2, "0");
   const dateStr = (day: number) => `${year}-${pad(month + 1)}-${pad(day)}`;
-  const cellKey = (empId: string, day: number) => `${empId}-${dateStr(day)}`;
+  // ✅ Use | delimiter — safe for UUID IDs
+  const cellKey = (empId: string, day: number) => `${empId}|${dateStr(day)}`;
 
   const { data: employees = [] } = useQuery({
     queryKey: ["employees-active"],
@@ -55,7 +53,8 @@ const AttendancePage = () => {
     if (!attendance) return;
     const map: Record<string, CellData> = {};
     attendance.forEach((a) => {
-      const key = `${a.employee_id}-${a.date}`;
+      // ✅ Use | delimiter
+      const key = `${a.employee_id}|${a.date}`;
       map[key] = {
         status: a.status || "present",
         late_minutes: a.late_minutes || 0,
@@ -92,20 +91,38 @@ const AttendancePage = () => {
     mutationFn: async () => {
       const s = `${year}-${pad(month + 1)}-01`;
       const e = `${year}-${pad(month + 1)}-${daysInMonth}`;
-      await supabase.from("attendance").delete().gte("date", s).lte("date", e);
-      const records = Object.entries(cells).map(([key, cell]) => {
-        const employee_id = key.substring(0, 36);
-        const date = key.substring(37);
-        return {
-          employee_id, date,
-          status: cell.status,
-          late_minutes: cell.late_minutes || 0,
-          overtime_hours: cell.overtime_hours || 0,
-        };
-      });
-      if (records.length) {
-        const { error } = await supabase.from("attendance").insert(records);
+
+      // ✅ Safe key parsing with split("|")
+      const records = Object.entries(cells).map(([key, cell]) => ({
+        employee_id: key.split("|")[0],
+        date: key.split("|")[1],
+        status: cell.status,
+        late_minutes: cell.late_minutes || 0,
+        overtime_hours: cell.overtime_hours || 0,
+      }));
+
+      if (records.length > 0) {
+        const { error } = await supabase.from("attendance").upsert(records, {
+          onConflict: "employee_id,date",
+          ignoreDuplicates: false,
+        });
         if (error) throw error;
+      }
+
+      // ✅ Delete only removed records
+      const { data: existing } = await supabase.from("attendance")
+        .select("id, date, employee_id")
+        .gte("date", s)
+        .lte("date", e);
+
+      if (existing && existing.length > 0) {
+        // ✅ Use | delimiter for filter check
+        const toDelete = existing
+          .filter(r => !cells[`${r.employee_id}|${r.date}`])
+          .map(r => r.id);
+        if (toDelete.length > 0) {
+          await supabase.from("attendance").delete().in("id", toDelete);
+        }
       }
     },
     onSuccess: () => {
@@ -115,7 +132,6 @@ const AttendancePage = () => {
     onError: (e: any) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
   });
 
-  // Summary per employee
   const getSummary = (empId: string) => {
     let present = 0, absent = 0, totalLate = 0, totalOT = 0;
     for (let d = 1; d <= daysInMonth; d++) {
@@ -184,22 +200,12 @@ const AttendancePage = () => {
                         </button>
                         {cell?.status === "present" && (
                           <div className="flex flex-col gap-0.5 px-0.5 pb-0.5">
-                            <Input
-                              type="number"
-                              placeholder="L"
-                              className="h-5 text-[9px] px-1 text-center"
-                              value={cell.late_minutes || ""}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => updateField(emp.id, day, "late_minutes", +e.target.value || 0)}
-                            />
-                            <Input
-                              type="number"
-                              placeholder="OT"
-                              className="h-5 text-[9px] px-1 text-center"
-                              value={cell.overtime_hours || ""}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => updateField(emp.id, day, "overtime_hours", +e.target.value || 0)}
-                            />
+                            <Input type="number" placeholder="L" className="h-5 text-[9px] px-1 text-center"
+                              value={cell.late_minutes || ""} onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateField(emp.id, day, "late_minutes", +e.target.value || 0)} />
+                            <Input type="number" placeholder="OT" className="h-5 text-[9px] px-1 text-center"
+                              value={cell.overtime_hours || ""} onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateField(emp.id, day, "overtime_hours", +e.target.value || 0)} />
                           </div>
                         )}
                       </td>
@@ -216,7 +222,6 @@ const AttendancePage = () => {
         </table>
       </div>
 
-      {/* Legend */}
       <div className="flex gap-4 text-xs text-muted-foreground">
         <span>✅ উপস্থিত</span><span>❌ অনুপস্থিত</span><span>🏖️ ছুটি</span>
         <span className="ml-auto">L = লেট (মিনিট) | OT = ওভারটাইম (ঘণ্টা)</span>

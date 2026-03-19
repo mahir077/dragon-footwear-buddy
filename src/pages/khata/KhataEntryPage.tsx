@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import EntryAttachment from "@/components/EntryAttachment";
+import EntryCustomFields from "@/components/EntryCustomFields";
+import { journalIncome, journalExpense, journalBankDeposit, journalBankWithdrawal } from "@/lib/autoJournal";
+
 
 const txTypes = [
   { key: "income", bn: "আয়", en: "Income", emoji: "🟢", color: "hsl(var(--stat-green))" },
@@ -22,6 +26,9 @@ const KhataEntryPage = () => {
   const [bankId, setBankId] = useState("");
   const [incomeHeadId, setIncomeHeadId] = useState("");
   const [expenseHeadId, setExpenseHeadId] = useState("");
+
+  // ✅ Pre-generated entry ID — form open হলেই তৈরি
+  const [entryId, setEntryId] = useState(() => crypto.randomUUID());
 
   const { data: activeYear } = useQuery({
     queryKey: ["active_financial_year"],
@@ -59,7 +66,7 @@ const KhataEntryPage = () => {
     queryKey: ["today_totals", date],
     queryFn: async () => {
       const { data } = await supabase.from("daily_transactions").select("type, amount").eq("date", date);
-      if (!data) return { income: 0, expense: 0 };
+      if (!data) return { income: 0, expense: 0, balance: 0 };
       let income = 0, expense = 0;
       data.forEach((t) => {
         if (t.type === "income" || t.type === "cash_receive") income += Number(t.amount);
@@ -72,6 +79,7 @@ const KhataEntryPage = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const row: any = {
+        id: entryId, // ✅ pre-generated ID
         date, type: selectedType, amount: Number(amount), note: note || null,
         year_id: activeYear?.id || null,
       };
@@ -81,15 +89,31 @@ const KhataEntryPage = () => {
       const { error } = await supabase.from("daily_transactions").insert(row);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["today_totals"] });
-      setAmount(""); setNote(""); setSelectedType(null);
-      toast({ title: "সফলভাবে সংরক্ষিত হয়েছে ✅" });
-    },
+    // পরে
+onSuccess: () => {
+  // ✅ Auto journal
+  const amt = Number(amount);
+  if (selectedType === "income" || selectedType === "cash_receive") {
+  journalIncome(entryId, date, amt, activeYear?.id);
+} else if (selectedType === "expense" || selectedType === "cash_payment") {
+  journalExpense(entryId, date, amt, activeYear?.id);
+} else if (selectedType === "bank_deposit") {
+  journalBankDeposit(entryId, date, amt, activeYear?.id);
+} else if (selectedType === "bank_withdrawal") {
+  journalBankWithdrawal(entryId, date, amt, activeYear?.id);
+}
+  qc.invalidateQueries({ queryKey: ["today_totals"] });
+  qc.invalidateQueries({ queryKey: ["daily_transactions"] });
+  setAmount(""); setNote(""); setSelectedType(null);
+  setBankId(""); setIncomeHeadId(""); setExpenseHeadId("");
+  setEntryId(crypto.randomUUID());
+  toast({ title: "সফলভাবে সংরক্ষিত হয়েছে ✅" });
+},
     onError: (e) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
   });
 
   const isBank = selectedType === "bank_deposit" || selectedType === "bank_withdrawal";
+  const currentType = txTypes.find(t => t.key === selectedType);
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
@@ -98,14 +122,12 @@ const KhataEntryPage = () => {
         <p className="text-sm text-muted-foreground">Daily Entry</p>
       </div>
 
-      {/* Date picker */}
       <div>
         <label className="font-bengali text-lg font-medium block mb-2">তারিখ</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
           className="w-full border-2 border-primary rounded-xl px-5 py-4 text-xl font-bold text-center" />
       </div>
 
-      {/* Type buttons */}
       {!selectedType && (
         <div className="space-y-3">
           <p className="font-bengali text-lg font-medium">ধরন নির্বাচন করুন</p>
@@ -123,17 +145,19 @@ const KhataEntryPage = () => {
         </div>
       )}
 
-      {/* Entry form */}
       {selectedType && (
         <div className="space-y-4 bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">{txTypes.find(t => t.key === selectedType)?.emoji}</span>
-              <span className="text-xl font-bold font-bengali" style={{ color: txTypes.find(t => t.key === selectedType)?.color }}>
-                {txTypes.find(t => t.key === selectedType)?.bn}
+              <span className="text-2xl">{currentType?.emoji}</span>
+              <span className="text-xl font-bold font-bengali" style={{ color: currentType?.color }}>
+                {currentType?.bn}
               </span>
             </div>
-            <button onClick={() => setSelectedType(null)} className="text-sm font-bengali text-muted-foreground hover:text-foreground px-3 py-1 rounded-lg bg-muted">পরিবর্তন</button>
+            <button onClick={() => setSelectedType(null)}
+              className="text-sm font-bengali text-muted-foreground hover:text-foreground px-3 py-1 rounded-lg bg-muted">
+              পরিবর্তন
+            </button>
           </div>
 
           <div>
@@ -145,7 +169,8 @@ const KhataEntryPage = () => {
           {selectedType === "income" && (
             <div>
               <label className="font-bengali text-base font-medium block mb-1">আয়ের খাত</label>
-              <select className="w-full border rounded-xl px-4 py-3 text-base" value={incomeHeadId} onChange={(e) => setIncomeHeadId(e.target.value)}>
+              <select className="w-full border rounded-xl px-4 py-3 text-base" value={incomeHeadId}
+                onChange={(e) => setIncomeHeadId(e.target.value)}>
                 <option value="">নির্বাচন করুন</option>
                 {incomeHeads.map((h) => <option key={h.id} value={h.id}>{h.name_bn}</option>)}
               </select>
@@ -155,7 +180,8 @@ const KhataEntryPage = () => {
           {selectedType === "expense" && (
             <div>
               <label className="font-bengali text-base font-medium block mb-1">ব্যয়ের খাত</label>
-              <select className="w-full border rounded-xl px-4 py-3 text-base" value={expenseHeadId} onChange={(e) => setExpenseHeadId(e.target.value)}>
+              <select className="w-full border rounded-xl px-4 py-3 text-base" value={expenseHeadId}
+                onChange={(e) => setExpenseHeadId(e.target.value)}>
                 <option value="">নির্বাচন করুন</option>
                 {expenseHeads.map((h) => <option key={h.id} value={h.id}>{h.name_bn}</option>)}
               </select>
@@ -165,7 +191,8 @@ const KhataEntryPage = () => {
           {isBank && (
             <div>
               <label className="font-bengali text-base font-medium block mb-1">ব্যাংক</label>
-              <select className="w-full border rounded-xl px-4 py-3 text-base" value={bankId} onChange={(e) => setBankId(e.target.value)}>
+              <select className="w-full border rounded-xl px-4 py-3 text-base" value={bankId}
+                onChange={(e) => setBankId(e.target.value)}>
                 <option value="">নির্বাচন করুন</option>
                 {banks.map((b) => <option key={b.id} value={b.id}>{b.bank_name} — {b.account_no}</option>)}
               </select>
@@ -174,17 +201,32 @@ const KhataEntryPage = () => {
 
           <div>
             <label className="font-bengali text-base font-medium block mb-1">নোট</label>
-            <input className="w-full border rounded-xl px-4 py-3 text-base" value={note} onChange={(e) => setNote(e.target.value)} placeholder="ঐচ্ছিক" />
+            <input className="w-full border rounded-xl px-4 py-3 text-base" value={note}
+              onChange={(e) => setNote(e.target.value)} placeholder="ঐচ্ছিক" />
           </div>
 
-          <button onClick={() => saveMutation.mutate()} disabled={!amount || Number(amount) <= 0 || saveMutation.isPending}
+          {/* ✅ Custom fields */}
+          <div className="border-t pt-3">
+            <EntryCustomFields module="khata" entryId={entryId} />
+          </div>
+
+          {/* ✅ Attachment */}
+          <div className="border-t pt-3">
+            <EntryAttachment
+              module="khata"
+              entryId={entryId}
+              entryLabel={`${currentType?.bn} — ${date}`}
+            />
+          </div>
+
+          <button onClick={() => saveMutation.mutate()}
+            disabled={!amount || Number(amount) <= 0 || saveMutation.isPending}
             className="w-full bg-[hsl(var(--stat-green))] text-white px-6 py-4 rounded-xl text-xl font-bengali font-bold hover:opacity-90 disabled:opacity-50 transition-opacity">
             {saveMutation.isPending ? "সংরক্ষণ হচ্ছে..." : "সংরক্ষণ করুন"}
           </button>
         </div>
       )}
 
-      {/* Today's summary */}
       {todayTotals && (
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-[hsl(var(--stat-green))]/10 rounded-xl p-4 text-center">

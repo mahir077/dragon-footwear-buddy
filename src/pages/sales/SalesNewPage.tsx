@@ -10,6 +10,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { journalCashSale, journalCreditSale } from "@/lib/autoJournal";
+import EntryCustomFields from "@/components/EntryCustomFields";
+import EntryAttachment from "@/components/EntryAttachment";
 
 type SaleItem = { article_id: string; color_id: string; cartons: number; pairs: number; rate: number; amount: number; season: string };
 
@@ -30,6 +33,9 @@ const SalesNewPage = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const isEdit = !!editId;
+
+  // ✅ Pre-generated entryId for new sales
+  const [entryId, setEntryId] = useState(() => crypto.randomUUID());
 
   const [saleType, setSaleType] = useState("cash");
   const [date, setDate] = useState<Date>(new Date());
@@ -57,7 +63,6 @@ const SalesNewPage = () => {
   const { data: partyBalance } = useQuery({ queryKey: ["party-balance", partyId], queryFn: async () => { if (!partyId) return null; const { data } = await supabase.from("v_party_balance").select("*").eq("party_id", partyId).single(); return data; }, enabled: !!partyId });
   const { data: years } = useQuery({ queryKey: ["active-year"], queryFn: async () => { const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).single(); return data; } });
 
-  // Load existing sale for edit
   useEffect(() => {
     if (!editId || loaded) return;
     const loadSale = async () => {
@@ -77,17 +82,12 @@ const SalesNewPage = () => {
       setPaidAmount(sale.paid_amount || 0);
       setPaymentMode(sale.payment_mode || "cash");
       setBankId(sale.bank_id || "");
-
       const { data: saleItems } = await supabase.from("sale_items").select("*").eq("sale_id", editId);
       if (saleItems && saleItems.length > 0) {
         setItems(saleItems.map((i: any) => ({
-          article_id: i.article_id || "",
-          color_id: i.color_id || "",
-          cartons: i.cartons || 0,
-          pairs: i.pairs || 0,
-          rate: i.rate || 0,
-          amount: i.amount || 0,
-          season: i.season === "গরম" ? "summer" : "winter",
+          article_id: i.article_id || "", color_id: i.color_id || "",
+          cartons: i.cartons || 0, pairs: i.pairs || 0, rate: i.rate || 0,
+          amount: i.amount || 0, season: i.season === "গরম" ? "summer" : "winter",
         })));
       }
       setLoaded(true);
@@ -95,7 +95,6 @@ const SalesNewPage = () => {
     loadSale();
   }, [editId, loaded]);
 
-  // Auto memo number (only for new)
   useEffect(() => {
     if (isEdit) return;
     supabase.from("sales").select("memo_no").order("created_at", { ascending: false }).limit(1).then(({ data }) => {
@@ -146,18 +145,15 @@ const SalesNewPage = () => {
       let saleId = editId;
 
       if (isEdit) {
-        // Update sale
         const { error } = await supabase.from("sales").update(saleData).eq("id", editId);
         if (error) throw error;
-        // Delete old items & movements
         await supabase.from("sale_items").delete().eq("sale_id", editId);
         await supabase.from("stock_movements").delete().eq("reference_id", editId);
       } else {
-        // Insert new sale
-        const { data: sale, error } = await supabase.from("sales").insert(saleData).select().single();
+        // ✅ pre-generated entryId use করছি
+        const { data: sale, error } = await supabase.from("sales").insert({ ...saleData, id: entryId }).select().single();
         if (error) throw error;
         saleId = sale.id;
-        // Auto daily transaction entry
         await supabase.from("daily_transactions").insert({
           date: format(date, "yyyy-MM-dd"), type: "income",
           amount: paidAmount > 0 ? paidAmount : totalBill,
@@ -165,7 +161,6 @@ const SalesNewPage = () => {
         });
       }
 
-      // Insert items
       const saleItems = items.filter(i => i.article_id).map(i => ({
         sale_id: saleId, article_id: i.article_id, color_id: i.color_id || null,
         cartons: i.cartons, pairs: i.pairs, rate: i.rate, amount: i.amount,
@@ -182,8 +177,20 @@ const SalesNewPage = () => {
         }));
         await supabase.from("stock_movements").insert(movements);
       }
+
+      return saleId;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      if (!isEdit && data) {
+        const dateStr = format(date, "yyyy-MM-dd");
+        if (saleType === "cash") {
+  await journalCashSale(data, dateStr, totalBill, years?.id);
+} else {
+  await journalCreditSale(data, dateStr, totalBill, years?.id);
+}
+        // ✅ Next entry-র জন্য নতুন ID
+        setEntryId(crypto.randomUUID());
+      }
       toast({ title: isEdit ? "বিক্রয় আপডেট হয়েছে ✅" : "সফলভাবে সংরক্ষিত হয়েছে ✅" });
       queryClient.invalidateQueries({ queryKey: ["sales-list"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
@@ -191,6 +198,9 @@ const SalesNewPage = () => {
     },
     onError: (e: any) => toast({ title: "ত্রুটি হয়েছে", description: e.message, variant: "destructive" }),
   });
+
+  // Edit mode-এ real sale ID use করব
+  const activeEntryId = isEdit ? (editId || entryId) : entryId;
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -326,6 +336,13 @@ const SalesNewPage = () => {
           <p className="text-xs opacity-70 font-bengali">বর্তমান বাকি</p>
           <p className="text-2xl font-extrabold font-bengali">৳{currentDue.toLocaleString()}</p>
         </div>
+      </div>
+
+      {/* ✅ Custom Fields + Attachment */}
+      <div className="bg-card p-4 rounded-xl border space-y-3">
+        <h3 className="font-bold font-bengali">অতিরিক্ত তথ্য</h3>
+        <EntryCustomFields module="sales" entryId={activeEntryId} />
+        <EntryAttachment module="sales" entryId={activeEntryId} />
       </div>
 
       <div className="flex gap-3">

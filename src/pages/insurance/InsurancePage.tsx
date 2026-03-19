@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus } from "lucide-react";
+import { format } from "date-fns";
+import { journalInsuranceDeposit } from "@/lib/autoJournal";
 
 const toBn = (n: number) => n.toLocaleString("bn-BD");
 const monthsBn = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
@@ -30,7 +32,10 @@ const InsurancePage = ({ insuranceType, title, subtitle }: InsurancePageProps) =
 
   const { data: activeYear } = useQuery({
     queryKey: ["activeYear"],
-    queryFn: async () => { const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle(); return data; },
+    queryFn: async () => {
+      const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle();
+      return data;
+    },
   });
 
   const { data: ledgers = [] } = useQuery({
@@ -45,15 +50,23 @@ const InsurancePage = ({ insuranceType, title, subtitle }: InsurancePageProps) =
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("insurance_ledgers").insert({
+      const { data: ledger, error } = await supabase.from("insurance_ledgers").insert({
         name: form.name, address: form.address || null, month: form.month,
         deposit: form.deposit, withdrawal: form.withdrawal,
         type: insuranceType, year_id: activeYear?.id || null,
-      });
+      }).select().single();
       if (error) throw error;
+      return ledger;
     },
-    onSuccess: () => {
-      toast({ title: "সংরক্ষিত ✅" }); qc.invalidateQueries({ queryKey: ["insurance-ledgers"] }); setOpen(false);
+    onSuccess: (data) => {
+      // ✅ Auto journal — শুধু deposit হলে
+      const dateStr = format(new Date(), "yyyy-MM-dd");
+      if (data && form.deposit > 0) {
+        journalInsuranceDeposit(data.id, dateStr, form.deposit, activeYear?.id);
+      }
+      toast({ title: "সংরক্ষিত ✅" });
+      qc.invalidateQueries({ queryKey: ["insurance-ledgers"] });
+      setOpen(false);
       setForm({ name: "", address: "", month: now.getMonth() + 1, deposit: 0, withdrawal: 0 });
     },
     onError: (e: any) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
@@ -75,7 +88,10 @@ const InsurancePage = ({ insuranceType, title, subtitle }: InsurancePageProps) =
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h1 className="text-2xl font-extrabold">{title}</h1><p className="text-sm text-muted-foreground">{subtitle}</p></div>
+        <div>
+          <h1 className="text-2xl font-extrabold">{title}</h1>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
         <div className="flex gap-2 items-center">
           <Select value={String(month)} onValueChange={(v) => setMonth(+v)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -86,17 +102,32 @@ const InsurancePage = ({ insuranceType, title, subtitle }: InsurancePageProps) =
             <DialogContent>
               <DialogHeader><DialogTitle>{title} এন্ট্রি</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <div><Label>নাম</Label><Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} /></div>
-                <div><Label>ঠিকানা</Label><Input value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} /></div>
-                <div><Label>মাস</Label>
+                <div>
+                  <Label>নাম</Label>
+                  <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>ঠিকানা</Label>
+                  <Input value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>মাস</Label>
                   <Select value={String(form.month)} onValueChange={(v) => setForm((p) => ({ ...p, month: +v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{monthsBn.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>জমা (৳)</Label><Input type="number" value={form.deposit || ""} onChange={(e) => setForm((p) => ({ ...p, deposit: +e.target.value }))} /></div>
-                <div><Label>উত্তোলন (৳)</Label><Input type="number" value={form.withdrawal || ""} onChange={(e) => setForm((p) => ({ ...p, withdrawal: +e.target.value }))} /></div>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending} className="w-full">সংরক্ষণ করুন</Button>
+                <div>
+                  <Label>জমা (৳)</Label>
+                  <Input type="number" value={form.deposit || ""} onChange={(e) => setForm((p) => ({ ...p, deposit: +e.target.value }))} />
+                </div>
+                <div>
+                  <Label>উত্তোলন (৳)</Label>
+                  <Input type="number" value={form.withdrawal || ""} onChange={(e) => setForm((p) => ({ ...p, withdrawal: +e.target.value }))} />
+                </div>
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending} className="w-full">
+                  সংরক্ষণ করুন
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -106,9 +137,20 @@ const InsurancePage = ({ insuranceType, title, subtitle }: InsurancePageProps) =
       <Card>
         <CardContent className="pt-4 overflow-x-auto">
           <Table>
-            <TableHeader><TableRow><TableHead>নাম</TableHead><TableHead>ঠিকানা</TableHead><TableHead className="text-right">Opening</TableHead><TableHead className="text-right">জমা</TableHead><TableHead className="text-right">উত্তোলন</TableHead><TableHead className="text-right">Closing</TableHead></TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>নাম</TableHead>
+                <TableHead>ঠিকানা</TableHead>
+                <TableHead className="text-right">Opening</TableHead>
+                <TableHead className="text-right">জমা</TableHead>
+                <TableHead className="text-right">উত্তোলন</TableHead>
+                <TableHead className="text-right">Closing</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {personGroups.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">কোনো তথ্য নেই</TableCell></TableRow>}
+              {personGroups.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">কোনো তথ্য নেই</TableCell></TableRow>
+              )}
               {personGroups.map(([key, group]) => {
                 const prev = group.entries.filter((e) => (e.month || 0) < month + 1);
                 const opening = prev.reduce((s, e) => s + (e.opening || 0) + (e.deposit || 0) - (e.withdrawal || 0), 0);

@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { journalWasteSale } from "@/lib/autoJournal";
+import EntryAttachment from "@/components/EntryAttachment";
 
 const toBn = (n: number) => n.toString().replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
 
@@ -24,20 +26,14 @@ export default function WasteSalePage() {
 
   const total = typeof quantity === "number" && typeof rate === "number" ? quantity * rate : 0;
 
-  // Get active year
   const { data: activeYear } = useQuery({
     queryKey: ["activeYear"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("financial_years")
-        .select("*")
-        .eq("is_active", true)
-        .maybeSingle();
+      const { data } = await supabase.from("financial_years").select("*").eq("is_active", true).maybeSingle();
       return data;
     },
   });
 
-  // Fetch waste sales
   const { data: sales = [] } = useQuery({
     queryKey: ["waste_sales", activeYear?.id],
     queryFn: async () => {
@@ -49,32 +45,29 @@ export default function WasteSalePage() {
     enabled: !!activeYear,
   });
 
-  // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("waste_sales").insert({
+      const { data: waste, error } = await supabase.from("waste_sales").insert({
         year_id: activeYear?.id,
-        date,
-        item_name: itemName,
+        date, item_name: itemName,
         quantity: typeof quantity === "number" ? quantity : 0,
         rate: typeof rate === "number" ? rate : 0,
-        total,
-        note: note || null,
-      });
+        total, note: note || null,
+      }).select().single();
       if (error) throw error;
+      return waste;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data && total > 0) {
+        journalWasteSale(data.id, data.date, total, activeYear?.id);
+      }
       toast({ title: "সফলভাবে সংরক্ষিত হয়েছে ✅" });
       qc.invalidateQueries({ queryKey: ["waste_sales"] });
-      setItemName("");
-      setQuantity("");
-      setRate("");
-      setNote("");
+      setItemName(""); setQuantity(""); setRate(""); setNote("");
     },
     onError: (e: any) => toast({ title: "ত্রুটি", description: e.message, variant: "destructive" }),
   });
 
-  // Delete
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("waste_sales").delete().eq("id", id);
@@ -86,7 +79,6 @@ export default function WasteSalePage() {
     },
   });
 
-  // Monthly totals
   const monthlyTotals = useMemo(() => {
     const map: Record<string, number> = {};
     sales.forEach((s: any) => {
@@ -132,11 +124,9 @@ export default function WasteSalePage() {
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ঐচ্ছিক" />
             </div>
           </div>
-          <Button
-            className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+          <Button className="mt-4 bg-green-600 hover:bg-green-700 text-white"
             onClick={() => saveMutation.mutate()}
-            disabled={!itemName || !quantity || !rate || saveMutation.isPending}
-          >
+            disabled={!itemName || !quantity || !rate || saveMutation.isPending}>
             {saveMutation.isPending ? "সংরক্ষণ হচ্ছে..." : "সংরক্ষণ করুন"}
           </Button>
         </CardContent>
@@ -164,19 +154,27 @@ export default function WasteSalePage() {
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">কোনো তথ্য নেই</TableCell></TableRow>
                 )}
                 {sales.map((s: any) => (
-                  <TableRow key={s.id}>
-                    <TableCell>{s.date}</TableCell>
-                    <TableCell>{s.item_name}</TableCell>
-                    <TableCell className="text-right">{toBn(s.quantity || 0)}</TableCell>
-                    <TableCell className="text-right">৳{toBn(s.rate || 0)}</TableCell>
-                    <TableCell className="text-right font-semibold">৳{toBn(s.total || 0)}</TableCell>
-                    <TableCell className="text-muted-foreground">{s.note || "—"}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(s.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={s.id}>
+                      <TableCell>{s.date}</TableCell>
+                      <TableCell>{s.item_name}</TableCell>
+                      <TableCell className="text-right">{toBn(s.quantity || 0)}</TableCell>
+                      <TableCell className="text-right">৳{toBn(s.rate || 0)}</TableCell>
+                      <TableCell className="text-right font-semibold">৳{toBn(s.total || 0)}</TableCell>
+                      <TableCell className="text-muted-foreground">{s.note || "—"}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(s.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {/* ✅ Attachment */}
+                    <TableRow key={`${s.id}-attach`}>
+                      <TableCell colSpan={7} className="px-3 pb-2 pt-0">
+                        <EntryAttachment module="waste" entryId={s.id} />
+                      </TableCell>
+                    </TableRow>
+                  </>
                 ))}
               </TableBody>
             </Table>
