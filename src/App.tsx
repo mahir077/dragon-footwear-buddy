@@ -80,6 +80,7 @@ import PartySummaryPage from "./pages/summary/PartySummaryPage";
 import BrandSummaryPage from "./pages/summary/BrandSummaryPage";
 import StockSummaryPage from "./pages/summary/StockSummaryPage";
 import MonthlyExpensePage from "./pages/summary/MonthlyExpensePage";
+import BOMSetupPage from "./pages/production/BOMSetupPage";
 
 
 const queryClient = new QueryClient();
@@ -205,6 +206,7 @@ const App = () => {
                 <Route path="/purchase/advance" element={<AdvancePage />} />
                 <Route path="/production/entry" element={<ProductionEntryPage />} />
                 <Route path="/production/list" element={<ProductionListPage />} />
+                <Route path="/production/bom" element={<BOMSetupPage />} />
                 <Route path="/godown/stock" element={<GodownStockPage />} />
                 <Route path="/godown/damage" element={<DamagePage />} />
                 <Route path="/godown/transfer" element={<TransferPage />} />

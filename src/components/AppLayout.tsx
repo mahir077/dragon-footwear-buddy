@@ -54,6 +54,7 @@ const menuItems: MenuItem[] = [
     bn: "উৎপাদন", icon: Factory,
     children: [
       { bn: "নতুন উৎপাদন", path: "/production/entry" },
+      { bn: "BOM সেটআপ", path: "/production/bom" },
       { bn: "উৎপাদন তালিকা", path: "/production/list" },
       { bn: "গোডাউন স্টক", path: "/godown/stock" },
       { bn: "ড্যামেজ", path: "/godown/damage" },
