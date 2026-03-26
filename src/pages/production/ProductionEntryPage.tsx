@@ -16,7 +16,7 @@ import EntryAttachment from "@/components/EntryAttachment";
 
 const db = supabase as any;
 const toBn = (n: number) => n.toString().replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
-const toBnMoney = (n: number) => n.toLocaleString("bn-BD");
+const toBnMoney = (n: number) => n.toLocaleString("en-US");
 
 const ProductionEntryPage = () => {
   const qc = useQueryClient();

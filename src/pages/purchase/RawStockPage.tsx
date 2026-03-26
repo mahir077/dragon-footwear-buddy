@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const db = supabase as any;
 const toBn = (n: number) => n.toString().replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[+d]);
-const toBnMoney = (n: number) => n.toLocaleString("bn-BD");
+const toBnMoney = (n: number) => n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const RawStockPage = () => {
   const { data: materials = [], isLoading } = useQuery({

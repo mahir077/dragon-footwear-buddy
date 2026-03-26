@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Save } from "lucide-react";
 
 const db = supabase as any;
-const toBnMoney = (n: number) => n.toLocaleString("bn-BD");
+const toBnMoney = (n: number) => n.toLocaleString("en-US");
 
 type BOMRow = {
   material_id: string;
